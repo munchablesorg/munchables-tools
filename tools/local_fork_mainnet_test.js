@@ -9,7 +9,7 @@ import { parse } from 'csv-parse';
 import {BigNumber, ethers} from "ethers";
 import {distribute_contract, provider, usdb_contract, weth_contract} from "../lib/contracts.js";
 import {populateDistribute} from "./populate_distribute_helper.js";
-import {fundDistribute} from "./fund_distribute_helper.js";
+import {distributeAll} from "./helpers/distribute_helper.js";
 import assert from 'assert';
 import cliProgress from "cli-progress";
 import {ACCOUNT_COUNT} from "../lib/env.js";
@@ -140,7 +140,7 @@ const validateFinalBalances = async (filename) => {
         `should be ${process.env.ETH_QUANTITY} ${process.env.USDB_QUANTITY} ${process.env.WETH_QUANTITY}`
     );
 
-    await fundDistribute();
+    await distributeAll();
     console.log("Funds distributed")
 
     // Verify all final balances are the same

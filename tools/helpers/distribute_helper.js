@@ -2,7 +2,7 @@ import {distribute_contract, provider} from "../lib/contracts.js";
 import {ACCOUNT_COUNT} from "../lib/env.js";
 
 const DISTRIBUTE_BATCH = process.env.DISTRIBUTE_BATCH || 100;
-export const fundDistribute = async () => {
+export const distributeAll = async () => {
   const iterations = Math.ceil(ACCOUNT_COUNT / DISTRIBUTE_BATCH)
   for (let i = 0; i < iterations; i++) {
     try {

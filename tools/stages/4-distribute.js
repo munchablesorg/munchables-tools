@@ -1,6 +1,6 @@
-import {fundDistribute} from "../helpers/distribute_helper.js";
+import {distributeAll} from "../helpers/distribute_helper.js";
 
 (async () => {
     console.log(`Distributing funds`);
-    await fundDistribute();
+    await distributeAll();
 })();
