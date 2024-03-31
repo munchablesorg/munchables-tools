@@ -43,8 +43,12 @@ const publish_queue = async (queue, customSigner) => {
         gasLimit: 20000000
       });
     // on clone network waitForTransaction hangs
-    // await sleep(3000);
-    await provider.waitForTransaction(res.hash, 3);
+    if (process.env.BLAST_ENV === 'clone'){
+        await sleep(3000);
+    }
+    else {
+        await provider.waitForTransaction(res.hash, 3);
+    }
     // console.log('confirmed in block');
 
     return res.hash;
