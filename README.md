@@ -7,10 +7,11 @@ npm i
 
 ## Initiating Event Sequence (assuming already deployed Distribute contract)
 
-0. Use .env.example as a reference and fill in its associated environment
-   variables to a .env file.
-1. Generate or copy over your locks-collated.csv file to the root of the
-   directory.
+0. Use `.env.example` as a reference and fill in its associated environment
+   variables to a `.env` file.
+1. Generate or copy over your `locks-collated.csv` file to the root of the
+   directory. This can be done from scratch by using the tutorial below on
+   generating locks.csv and then collating the raw data.
 2. Run the following command to initiate data population, confirm valid data
    on-chain, and then seal the data for the next stage:
 ```code
