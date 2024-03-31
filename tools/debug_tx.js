@@ -7,9 +7,13 @@ if (process.argv.length < 3 || process.argv[2].substring(0, 2) !== '0x'){
 const tx_hash = process.argv[2];
 
 (async (tx_hash) => {
+    const opts = {};
+    if (process.env.NODE.indexOf('127.0.0.1') === -1){
+        opts.tracer = 'callTracer';
+    }
     const response = await provider.send("debug_traceTransaction", [
         tx_hash,
-        {"tracer": "callTracer"},
+        opts,
     ]);
     console.log(response);
     if (!response.error) {
