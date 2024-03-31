@@ -16,7 +16,7 @@ const tx_hash = process.argv[2];
         opts,
     ]);
     console.log(response);
-    if (!response.error) {
+    if (!response.error && !response.failed) {
         console.log('\x1b[32m%s\x1b[0m', `Transaction successful`);
     }
     else {
