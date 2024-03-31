@@ -6,12 +6,13 @@ import {distribute_contract, provider} from "../lib/contracts.js";
 import {BigNumber} from "ethers";
 import cliProgress from "cli-progress";
 import {ACCOUNT_COUNT} from "../lib/env.js";
+import {sleep} from "../lib/sleep.js";
 const __dirname = new URL('.', import.meta.url).pathname;
 
 const QUEUE_LENGTH = process.env.QUEUE_LENGTH;
 let retries = [];
 
-const progress_bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+const progress_bar = new cliProgress.SingleBar({linewrap: false}, cliProgress.Presets.shades_classic);
 
 const symbol_to_id = (sym) => {
     switch (sym){
@@ -31,46 +32,57 @@ const publish_queue = async (queue, customSigner) => {
         let account;
         account = queue[i].account;
         accounts.push(account);
-        tokens.push(queue[i].symbol);
+        tokens.push(queue[i].token_type);
         quantities.push(BigNumber.from(queue[i].quantity));
     }
-    const res = 
+    // console.log(accounts, tokens, quantities)
+    const res =
       customSigner ?
       await distribute_contract.connect(customSigner).populate(accounts, tokens, quantities) :
       await distribute_contract.populate(accounts, tokens, quantities, {
         gasLimit: 20000000
       });
+    // on clone network waitForTransaction hangs
+    // await sleep(3000);
     await provider.waitForTransaction(res.hash, 3);
+    // console.log('confirmed in block');
 
     return res.hash;
 }
 
 export const populateDistribute = async (filename, customSigner) => {
-    console.log(`Populating ${filename} to ${process.env.DISTRIBUTE_CONTRACT} on ${process.env.BLAST_ENV}`);
+    console.log(`Populating ${filename} to ${process.env.DISTRIBUTE_CONTRACT} on ${process.env.BLAST_ENV} with queue length ${process.env.QUEUE_LENGTH}`);
     progress_bar.start(Math.ceil(ACCOUNT_COUNT / QUEUE_LENGTH), 0); // 3223 = lines in final collated csv
 
     const parser = fs
         .createReadStream(filename)
-        .pipe(parse({
-            // CSV options if any
-        }));
+        .pipe(parse({}));
     let queue = [];
     let published = 0;
     for await (const record of parser) {
         // Work with each record
-        const [account, quantity, symbol] = record;
-        queue.push({account, symbol, quantity});
-        if (queue.length === QUEUE_LENGTH){
-            const tx_id = await publish_queue(queue, customSigner);
-            progress_bar.update(++published);
+        const [account, quantity, token_type] = record;
+        queue.push({account, token_type, quantity});
 
-            retries[tx_id] = queue;
+        if (queue.length >= QUEUE_LENGTH){
+            try {
+                const tx_id = await publish_queue(queue, customSigner);
+                progress_bar.update(++published);
 
-            queue = [];
+                retries[tx_id] = queue;
+
+                queue = [];
+            }
+            catch (e){
+                // progress_bar.stop()
+                console.error(`Error publishing - ${e.message}`)
+                process.exit(1)
+            }
         }
     }
     if (queue.length){
         const tx_id = await publish_queue(queue, customSigner);
+        progress_bar.update(++published);
 
         retries[tx_id] = queue;
     }
