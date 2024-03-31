@@ -5,7 +5,7 @@ Populates the DISTRIBUTE_CONTRACT with data from the locks-collated.csv file
 import fs from "fs";
 import dotenv from 'dotenv';
 dotenv.config();
-import { populateDistribute } from "./populate_distribute_helper.js";
+import { populateDistribute } from "../helpers/populate_distribute_helper.js";
 
 (async () => {
     let filename = 'locks-collated.csv';

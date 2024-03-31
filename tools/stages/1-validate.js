@@ -5,13 +5,13 @@ Validates that the locks-collated.csv file data and the chain data match exactly
 import dotenv from 'dotenv';
 dotenv.config();
 
-import {distribute_contract} from "../lib/contracts.js";
-import {sleep} from "../lib/sleep.js";
+import {distribute_contract} from "../../lib/contracts.js";
+import {sleep} from "../../lib/sleep.js";
 import {createHash} from "crypto";
 import fs from "fs";
 import {parse} from "csv-parse";
 import cliProgress from 'cli-progress';
-import {ACCOUNT_COUNT} from "../lib/env.js";
+import {ACCOUNT_COUNT} from "../../lib/env.js";
 
 const generate_hash = (data, name = '') => {
     const stringified = data.map(d => `${d.account}:${d.quantity.toString()}:${d.token_type}`.toLowerCase());

@@ -6,7 +6,7 @@ import fs from "fs";
 import dotenv from 'dotenv';
 dotenv.config();
 import { parse } from 'csv-parse';
-import { ethers } from "ethers";
+import {BigNumber, ethers} from "ethers";
 import {distribute_contract, provider, usdb_contract, weth_contract} from "../lib/contracts.js";
 import {populateDistribute} from "./populate_distribute_helper.js";
 import {fundDistribute} from "./fund_distribute_helper.js";
@@ -108,15 +108,22 @@ const validateFinalBalances = async (filename) => {
   console.log("Impersonated accounts")
   try {
     // Populate and distribute funds
-    await populateDistribute(filename, distributeOwner);
+    try {
+      await populateDistribute(filename, distributeOwner);
+    }
+    catch (e){
+      console.error(`Error populating ${e.message}`)
+      process.exit(1)
+    }
+
     console.log("Populated funds")
     const sealRes = await distribute_contract.connect(distributeOwner).seal();
     console.log(`Sealed funds ${sealRes.hash}`)
-    console.log("Impersonated msig owner")
 
-    const approveUSDB = await usdb_contract.connect(msigOwner).approve(process.env.DISTRIBUTE_CONTRACT, ethers.utils.hexlify(BigInt(process.env.USDB_QUANTITY)));
+    console.log("Approving and funding")
+    const approveUSDB = await usdb_contract.connect(msigOwner).approve(process.env.DISTRIBUTE_CONTRACT, BigNumber.from(process.env.USDB_QUANTITY));
     console.log(`Approved USDB ${approveUSDB.hash}`)
-    const approveWETH = await weth_contract.connect(msigOwner).approve(process.env.DISTRIBUTE_CONTRACT, ethers.utils.hexlify(BigInt(process.env.WETH_QUANTITY)));
+    const approveWETH = await weth_contract.connect(msigOwner).approve(process.env.DISTRIBUTE_CONTRACT, BigNumber.from(process.env.WETH_QUANTITY));
     console.log(`Approved WETH ${approveWETH.hash}`)
     const sendFunds = await distribute_contract.connect(msigOwner).fund({value: process.env.ETH_QUANTITY});
     console.log(`Funds sent to contract ${sendFunds.hash}`)

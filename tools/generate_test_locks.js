@@ -15,11 +15,13 @@ const mnemonic = process.env.TESTNET_WALLET_MNEMONIC;
 const hdwallet = HDWallet.fromMnemonic(mnemonic);
 const wallet = hdwallet.derive(`m/44'/60'/0'/0`);
 let wallet_index = 0;
-const count_test = 500;
+const count_test = process.argv[2] || 500;
 
 (async () => {
     const infile = './locks-collated.csv';
     const outfile = './locks-collated-test.csv';
+
+    console.log(`Creating test lock file with controlled accounts and lower quantities, ${count_test} rows`);
     const parser = fs
         .createReadStream(infile)
         .pipe(parse({}));
@@ -31,26 +33,26 @@ const count_test = 500;
     };
     for await (const record of parser) {
         // For testnet, swap account and divide quantity by 10000
-        if (process.env.BLAST_ENV === 'testnet'){
-            record[0] = `0x${wallet.derive(wallet_index++).getAddress().toString('hex')}`;
-            const qty_bn = BigNumber.from(record[1]);
-            record[1] =  (qty_bn.div(BigNumber.from(10000))).toString();
-        }
+        record[0] = `0x${wallet.derive(wallet_index++).getAddress().toString('hex')}`;
+        const qty_bn = BigNumber.from(record[1]);
+        record[1] =  (qty_bn.div(BigNumber.from(10000))).toString();
+
         const [account, quantity, token_type] = record;
 
         totals[token_type] = totals[token_type].add(BigNumber.from(quantity));
 
         csv_data.push(`${account},${quantity},${token_type}`);
-        if (csv_data.length >= count_test && process.env.BLAST_ENV === 'testnet'){
-            console.log('Totals', totals);
-            console.log(`ETH : ${totals[1].toString()} ${ethers.utils.formatEther(totals[1])}`);
-            console.log(`USDB : ${totals[2].toString()} ${ethers.utils.formatEther(totals[2])}`);
-            console.log(`WETH : ${totals[3].toString()} ${ethers.utils.formatEther(totals[3])}`);
+        if (count_test > 0 && csv_data.length >= count_test && process.env.BLAST_ENV === 'testnet'){
             break;
         }
     }
     fs.writeFile(outfile, csv_data.join(`\n`), () => {
         console.log(`${outfile} written`);
         process.exit(0);
-    })
+    });
+
+    console.log('Totals', totals);
+    console.log(`ETH : ${totals[1].toString()} ${ethers.utils.formatEther(totals[1])}`);
+    console.log(`USDB : ${totals[2].toString()} ${ethers.utils.formatEther(totals[2])}`);
+    console.log(`WETH : ${totals[3].toString()} ${ethers.utils.formatEther(totals[3])}`);
 })();
