@@ -1,4 +1,4 @@
-import {provider} from "../lib/contracts.js";
+import {provider} from "../../lib/contracts.js";
 
 if (process.argv.length < 3 || process.argv[2].substring(0, 2) !== '0x'){
     console.error(`Usage: debug_tx.js <tx_hash>`);

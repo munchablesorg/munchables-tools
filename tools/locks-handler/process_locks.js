@@ -1,8 +1,8 @@
 import fs from "fs";
 import path from "path";
-import {Lock} from '../lib/lock.js';
+import {Lock} from '../../lib/lock.js';
 import {BigNumber, ethers} from "ethers";
-import {provider, usdb_contract, weth_contract} from "../lib/contracts.js";
+import {provider, usdb_contract, weth_contract} from "../../lib/contracts.js";
 
 
 (async () => {

@@ -40,7 +40,7 @@ node tools/stages/5-validate_distribution.js
 This file is a csv with one row for each lock action
 
 ```code
-node tools/get_locks.js
+node tools/locks-handler/get_locks.js
 ```
 
 This will write cached data to the locks directory in the format locks-<block_number>.json with every lock seen in that 
@@ -49,7 +49,7 @@ block.
 get_locks can be started with `-s <block_number` as a starting block and can be run in parallel to speed up scanning.
 
 ```code
-node tools/process_locks.js
+node tools/locks-handler/process_locks.js
 ```
 
 This will write the cached data to csv and display stats
@@ -59,7 +59,7 @@ This will write the cached data to csv and display stats
 The raw data needs to be collated to just have the data we need and to be a single row per account.
 
 ```code
-node tools/collate_locks.js
+node tools/locks-handler/collate_locks.js
 ```
 This will write out `locks-collated.csv` which will be needed to populate the contract.
 
@@ -69,7 +69,7 @@ The populate script will read data from `locks-collated.csv` and send them to th
 to populate.
 
 ```code
-node tools/populate_distribute.js
+node tools/stages/0-populate.js
 ```
 
 ## Verifying contract state
@@ -78,7 +78,7 @@ The verification script will compare all the data in the contract to your local 
 by hashing all of the addresses, quantities and token types from the contract data and the csv file.
     
 ```code
-node tools/validate_csv_to_chain.js
+node tools/stages/1-validate.js
 ```
 Once the contract state is validated, the contract should be able to be sealed and will then wait for funding.
 
@@ -92,5 +92,5 @@ anvil --fork-url <insert blast rpc url here>
 Then run this from the tools directory
 
 ```code
-node fork-validation/full_test.js 
+node tools/fork-validation/full_test.js 
 ```

@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config();
-import {distribute_contract} from "../lib/contracts.js";
+import {distribute_contract} from "../../lib/contracts.js";
 import {ethers} from "ethers";
 
 const print_totals = (totals) => {

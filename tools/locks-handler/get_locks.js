@@ -1,9 +1,9 @@
-import {lock_contract, nft_contract, provider, usdb_contract, weth_contract} from "../lib/contracts.js";
+import {lock_contract, nft_contract, provider, usdb_contract, weth_contract} from "../../lib/contracts.js";
 import {BigNumber, ethers} from "ethers";
-import {sleep} from "../lib/sleep.js";
+import {sleep} from "../../lib/sleep.js";
 import fs from 'fs';
-import {get_catchup_block} from "../lib/commandargs.js";
-import {Lock} from '../lib/lock.js';
+import {get_catchup_block} from "../../lib/commandargs.js";
+import {Lock} from '../../lib/lock.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
