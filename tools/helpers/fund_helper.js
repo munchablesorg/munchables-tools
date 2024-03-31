@@ -1,7 +1,7 @@
 import {distribute_contract, usdb_contract, weth_contract} from "../../lib/contracts.js";
 import {BigNumber} from "ethers";
 
-export const approveAndFund = async (customSigner = null) => {
+export const approveAndFund = async (distributor, customSigner = null) => {
   const uc = (customSigner) ? usdb_contract.connect(customSigner) : usdb_contract;
   const wc = (customSigner) ? weth_contract.connect(customSigner) : weth_contract;
 
@@ -17,10 +17,10 @@ export const approveAndFund = async (customSigner = null) => {
 
   let sendFunds;
   if (customSigner){
-    sendFunds = await distribute_contract.connect(customSigner).fund({value: eth_qty});
+    sendFunds = await distribute_contract.connect(customSigner).fund(distributor, {value: eth_qty});
   }
   else {
-    sendFunds = await distribute_contract.fund({value: eth_qty});
+    sendFunds = await distribute_contract.fund(distributor, {value: eth_qty});
   }
   console.log(`Funds sent to contract ${sendFunds.hash}`)
 }
