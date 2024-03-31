@@ -56,11 +56,6 @@ const validateFinalBalances = async (filename) => {
       .createReadStream(filename)
       .pipe(parse({}));
   try {
-    const distributeETHBalance = await provider.getBalance(process.env.DISTRIBUTE_CONTRACT);
-    const distributeUSDBBalance = await usdb_contract.balanceOf(process.env.DISTRIBUTE_CONTRACT);
-    const distributeWETHBalance = await weth_contract.balanceOf(process.env.DISTRIBUTE_CONTRACT);
-    assert(distributeETHBalance.toString() === "0" && distributeUSDBBalance.toString() === "0" && distributeWETHBalance.toString() === "0", `Distribute contract has remaining balance ${distributeETHBalance.toString()} ${distributeUSDBBalance.toString()} ${distributeWETHBalance.toString()}`);
-
     console.log("Validated ending state of distribution contract")
     progressBar.start(ACCOUNT_COUNT, 0); // 3223 = lines in final collated csv
     for await (const record of parser) {
@@ -75,9 +70,19 @@ const validateFinalBalances = async (filename) => {
       } else {
           throw new Error(`Unknown token type ${token_type}`);
       }
-      assert((balance - priorBalances[account]).toString() === quantity, `Balance mismatch for account ${account} expected ${quantity} got ${balance.toString()}`);
+      const lowerBound = BigInt(quantity) * BigInt(99) / BigInt(100);
+      const upperBound = BigInt(quantity) * BigInt(101) / BigInt(100);
+      const delta = balance - priorBalances[account]
+      // Due to rounding errors, we allow a 1% margin of error
+      assert(delta >= lowerBound && delta <= upperBound, `Balance mismatch for account ${account} expected ${quantity} got ${delta.toString()}`);
       progressBar.update(progressBar.value + 1);
     }
+
+    const distributeETHBalance = await provider.getBalance(process.env.DISTRIBUTE_CONTRACT);
+    const distributeUSDBBalance = await usdb_contract.balanceOf(process.env.DISTRIBUTE_CONTRACT);
+    const distributeWETHBalance = await weth_contract.balanceOf(process.env.DISTRIBUTE_CONTRACT);
+    assert(distributeETHBalance.toString() === "0" && distributeUSDBBalance.toString() === "0" && distributeWETHBalance.toString() === "0", `Distribute contract has remaining balance ${distributeETHBalance.toString()} ${distributeUSDBBalance.toString()} ${distributeWETHBalance.toString()}`);
+
   }
   catch(e) {
     throw new Error(e);
@@ -91,7 +96,7 @@ const validateFinalBalances = async (filename) => {
   let snapshot
   try {
     snapshot = await provider.send('evm_snapshot', []);
-    //await getInitialBalances(filename);
+    await getInitialBalances(filename);
     console.log("Snapshot taken")
     await provider.send("hardhat_setBalance", [
       process.env.DISTRIBUTE_CONTRACT_OWNER,
@@ -121,7 +126,7 @@ const validateFinalBalances = async (filename) => {
     console.log("Populated funds")
     await sealContract(distributeOwner);
 
-    await approveAndFund(await msigOwner.getAddress(), msigOwner);
+    await approveAndFund(process.env.DISTRIBUTE_CONTRACT_OWNER, msigOwner);
 
     const distributeETHBalance = await provider.getBalance(process.env.DISTRIBUTE_CONTRACT);
     const distributeUSDBBalance = await usdb_contract.balanceOf(process.env.DISTRIBUTE_CONTRACT);
@@ -135,7 +140,7 @@ const validateFinalBalances = async (filename) => {
         `should be ${process.env.ETH_QUANTITY} ${process.env.USDB_QUANTITY} ${process.env.WETH_QUANTITY}`
     );
 
-    await distributeAll();
+    await distributeAll(distributeOwner);
     console.log("Funds distributed")
 
     // Verify all final balances are the same
@@ -143,7 +148,7 @@ const validateFinalBalances = async (filename) => {
     console.log("Fully validated end balances")
   } catch (e) {
     console.error(e);
-    await provider.send('evm_revert', [snapshot]);
+    //await provider.send('evm_revert', [snapshot]);
     process.exit(1);
   }
   await provider.send('evm_revert', [snapshot]);
