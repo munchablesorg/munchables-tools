@@ -5,6 +5,35 @@
 npm i
 ```
 
+## Initiating Event Sequence (assuming already deployed Distribute contract)
+
+0. Use .env.example as a reference and fill in its associated environment
+   variables to a .env file.
+1. Generate or copy over your locks-collated.csv file to the root of the
+   directory.
+2. Run the following command to initiate data population, confirm valid data
+   on-chain, and then seal the data for the next stage:
+```code
+node tools/stages/0-populate.js
+node tools/stages/1-validate.js
+node tools/stages/2-seal.js
+```
+3. Use the Multisig and approve the USDB and WETH transfer to the distribution
+   contract.
+4. Call the `fund(address)` function from the Multisig. Note: The address that
+   comes in here will be the wallet that is allowed to trigger the distribute
+   functions in the next stage.
+5. Make sure the `.env` file is updated with whichever private key is able to
+   call the distribute function (specified in the last step) and call the
+   following script:
+```code
+node tools/stages/4-distribute.js
+```
+6. Validate that everything was distributed using the final stage:
+```code
+node tools/stages/5-validate_distribution.js
+```
+
 ## Generating locks.csv file
 
 This file is a csv with one row for each lock action
@@ -57,10 +86,10 @@ Once the contract state is validated, the contract should be able to be sealed a
 First use hardhat to start a new node from the contract directory
 
 ```code
-npx hardhat node
+anvil --fork-url <insert blast rpc url here>
 ```
 Then run this from the tools directory
 
 ```code
-node tools/local_fork_mainnet_test.js 
+node fork-validation/full_test.js 
 ```

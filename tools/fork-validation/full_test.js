@@ -6,15 +6,15 @@ import fs from "fs";
 import dotenv from 'dotenv';
 dotenv.config();
 import { parse } from 'csv-parse';
-import {BigNumber, ethers} from "ethers";
-import {distribute_contract, provider, usdb_contract, weth_contract} from "../lib/contracts.js";
-import {populateDistribute} from "./helpers/populate_helper.js";
-import {distributeAll} from "./helpers/distribute_helper.js";
+import {ethers} from "ethers";
+import {provider, usdb_contract, weth_contract} from "../../lib/contracts.js";
+import {populateDistribute} from "../helpers/populate_helper.js";
+import {distributeAll} from "../helpers/distribute_helper.js";
 import assert from 'assert';
 import cliProgress from "cli-progress";
-import {ACCOUNT_COUNT} from "../lib/env.js";
-import {sealContract} from "./helpers/seal_helper.js";
-import {approveAndFund} from "./helpers/fund_helper.js";
+import {ACCOUNT_COUNT} from "../../lib/env.js";
+import {sealContract} from "../helpers/seal_helper.js";
+import {approveAndFund} from "../helpers/fund_helper.js";
 // put into memory balances prior to distribution
 const priorBalances = {};
 
