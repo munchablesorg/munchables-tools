@@ -1,5 +1,5 @@
-import {distribute_contract, provider} from "../lib/contracts.js";
-import {ACCOUNT_COUNT} from "../lib/env.js";
+import {distribute_contract, provider} from "../../lib/contracts.js";
+import {ACCOUNT_COUNT} from "../../lib/env.js";
 
 const DISTRIBUTE_BATCH = process.env.DISTRIBUTE_BATCH || 100;
 export const distributeAll = async () => {

@@ -8,7 +8,7 @@ dotenv.config();
 import { parse } from 'csv-parse';
 import {BigNumber, ethers} from "ethers";
 import {distribute_contract, provider, usdb_contract, weth_contract} from "../lib/contracts.js";
-import {populateDistribute} from "./populate_distribute_helper.js";
+import {populateDistribute} from "./helpers/populate_helper.js";
 import {distributeAll} from "./helpers/distribute_helper.js";
 import assert from 'assert';
 import cliProgress from "cli-progress";

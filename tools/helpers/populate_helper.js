@@ -2,11 +2,11 @@ import fs from "fs";
 import dotenv from 'dotenv';
 dotenv.config();
 import { parse } from 'csv-parse';
-import {distribute_contract, provider} from "../lib/contracts.js";
+import {distribute_contract, provider} from "../../lib/contracts.js";
 import {BigNumber} from "ethers";
 import cliProgress from "cli-progress";
-import {ACCOUNT_COUNT} from "../lib/env.js";
-import {sleep} from "../lib/sleep.js";
+import {ACCOUNT_COUNT} from "../../lib/env.js";
+import {sleep} from "../../lib/sleep.js";
 const __dirname = new URL('.', import.meta.url).pathname;
 
 const QUEUE_LENGTH = process.env.QUEUE_LENGTH;
