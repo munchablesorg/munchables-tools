@@ -11,6 +11,7 @@ import {createHash} from "crypto";
 import fs from "fs";
 import {parse} from "csv-parse";
 import cliProgress from 'cli-progress';
+import {ACCOUNT_COUNT} from "../lib/env.js";
 
 const generate_hash = (data, name = '') => {
     const stringified = data.map(d => `${d.account}:${d.quantity.toString()}:${d.token_type}`.toLowerCase());
@@ -43,7 +44,7 @@ const get_chain_hash = async () => {
 
     console.log(`Syncing accounts from contract ${process.env.DISTRIBUTE_CONTRACT}`);
     const progress_bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
-    progress_bar.start(Math.ceil(3223 / page_size), 0); // 3223 = lines in final collated csv
+    progress_bar.start(Math.ceil(ACCOUNT_COUNT / page_size), 0); // 3223 = lines in final collated csv
 
     while (true){
         let new_accounts = await distribute_contract.getAccountList(start);
