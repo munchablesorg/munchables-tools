@@ -121,7 +121,7 @@ const validateFinalBalances = async (filename) => {
     console.log("Populated funds")
     await sealContract(distributeOwner);
 
-    await approveAndFund(msigOwner);
+    await approveAndFund(await msigOwner.getAddress(), msigOwner);
 
     const distributeETHBalance = await provider.getBalance(process.env.DISTRIBUTE_CONTRACT);
     const distributeUSDBBalance = await usdb_contract.balanceOf(process.env.DISTRIBUTE_CONTRACT);
