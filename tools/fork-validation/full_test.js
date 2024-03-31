@@ -6,7 +6,7 @@ import fs from "fs";
 import dotenv from 'dotenv';
 dotenv.config();
 import { parse } from 'csv-parse';
-import {ethers} from "ethers";
+import {BigNumber} from "ethers";
 import {provider, usdb_contract, weth_contract} from "../../lib/contracts.js";
 import {populateDistribute} from "../helpers/populate_helper.js";
 import {distributeAll} from "../helpers/distribute_helper.js";
@@ -101,7 +101,7 @@ const validateFinalBalances = async (filename) => {
     await provider.send("hardhat_setBalance", [
       process.env.DISTRIBUTE_CONTRACT_OWNER,
       // doesn't really matter how much, just needs to be enough for txn fees
-      ethers.utils.hexlify(BigInt(process.env.ETH_QUANTITY)),
+      BigNumber.from(process.env.ETH_QUANTITY),
     ])
     await provider.send('hardhat_impersonateAccount', [process.env.DISTRIBUTE_CONTRACT_OWNER]);
     await provider.send('hardhat_impersonateAccount', [process.env.MSIG]);
