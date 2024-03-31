@@ -109,22 +109,29 @@ const validateFinalBalances = async (filename) => {
   try {
     // Populate and distribute funds
     await populateDistribute(filename, distributeOwner);
-    console.log("Populate funds")
-    await distribute_contract.connect(distributeOwner).seal();
-    console.log("Seal funds")
+    console.log("Populated funds")
+    const sealRes = await distribute_contract.connect(distributeOwner).seal();
+    console.log(`Sealed funds ${sealRes.hash}`)
     console.log("Impersonated msig owner")
 
     const approveUSDB = await usdb_contract.connect(msigOwner).approve(process.env.DISTRIBUTE_CONTRACT, ethers.utils.hexlify(BigInt(process.env.USDB_QUANTITY)));
-    console.log("Approve USDB")
+    console.log(`Approved USDB ${approveUSDB.hash}`)
     const approveWETH = await weth_contract.connect(msigOwner).approve(process.env.DISTRIBUTE_CONTRACT, ethers.utils.hexlify(BigInt(process.env.WETH_QUANTITY)));
-    console.log("Approve WETH")
-    const sendFunds = await distribute_contract.connect(msigOwner).fund({value: process.env.ETH_FUND});
-    console.log("Funds sent to contract")
+    console.log(`Approved WETH ${approveWETH.hash}`)
+    const sendFunds = await distribute_contract.connect(msigOwner).fund({value: process.env.ETH_QUANTITY});
+    console.log(`Funds sent to contract ${sendFunds.hash}`)
 
     const distributeETHBalance = await provider.getBalance(process.env.DISTRIBUTE_CONTRACT);
     const distributeUSDBBalance = await usdb_contract.balanceOf(process.env.DISTRIBUTE_CONTRACT);
     const distributeWETHBalance = await weth_contract.balanceOf(process.env.DISTRIBUTE_CONTRACT);
-    assert(distributeETHBalance.toString() === process.env.ETH_QUANTITY && distributeUSDBBalance.toString() === process.env.USDB_QUANTITY && distributeWETHBalance.toString() === process.env.WETH_QUANTITY, `Distribute contract has remaining balance ${distributeETHBalance.toString()} ${distributeUSDBBalance.toString()} ${distributeWETHBalance.toString()}`);
+    assert(
+        distributeETHBalance.toString() === process.env.ETH_QUANTITY &&
+        distributeUSDBBalance.toString() === process.env.USDB_QUANTITY &&
+        distributeWETHBalance.toString() === process.env.WETH_QUANTITY,
+        `Distribute contract has incorrect balance ` +
+        `${distributeETHBalance.toString()} ${distributeUSDBBalance.toString()} ${distributeWETHBalance.toString()} ` +
+        `should be ${process.env.ETH_QUANTITY} ${process.env.USDB_QUANTITY} ${process.env.WETH_QUANTITY}`
+    );
 
     await fundDistribute();
     console.log("Funds distributed")
