@@ -13,6 +13,8 @@ import {distributeAll} from "./helpers/distribute_helper.js";
 import assert from 'assert';
 import cliProgress from "cli-progress";
 import {ACCOUNT_COUNT} from "../lib/env.js";
+import {sealContract} from "./helpers/seal_helper.js";
+import {approveAndFund} from "./helpers/fund_helper.js";
 // put into memory balances prior to distribution
 const priorBalances = {};
 
@@ -117,16 +119,9 @@ const validateFinalBalances = async (filename) => {
     }
 
     console.log("Populated funds")
-    const sealRes = await distribute_contract.connect(distributeOwner).seal();
-    console.log(`Sealed funds ${sealRes.hash}`)
+    await sealContract(distributeOwner);
 
-    console.log("Approving and funding")
-    const approveUSDB = await usdb_contract.connect(msigOwner).approve(process.env.DISTRIBUTE_CONTRACT, BigNumber.from(process.env.USDB_QUANTITY));
-    console.log(`Approved USDB ${approveUSDB.hash}`)
-    const approveWETH = await weth_contract.connect(msigOwner).approve(process.env.DISTRIBUTE_CONTRACT, BigNumber.from(process.env.WETH_QUANTITY));
-    console.log(`Approved WETH ${approveWETH.hash}`)
-    const sendFunds = await distribute_contract.connect(msigOwner).fund({value: process.env.ETH_QUANTITY});
-    console.log(`Funds sent to contract ${sendFunds.hash}`)
+    await approveAndFund(msigOwner);
 
     const distributeETHBalance = await provider.getBalance(process.env.DISTRIBUTE_CONTRACT);
     const distributeUSDBBalance = await usdb_contract.balanceOf(process.env.DISTRIBUTE_CONTRACT);
