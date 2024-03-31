@@ -26,7 +26,7 @@ const symbol_to_id = (sym) => {
             return 0;
     }
 }
-const publish_queue = async (queue, customSigner) => {
+const publish_queue = async (queue, customSigner = null) => {
     const accounts = [], tokens = [], quantities = [];
     for (let i=0;i<queue.length;i++){
         let account;
