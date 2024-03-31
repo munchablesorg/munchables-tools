@@ -16,6 +16,7 @@ export const approveAndFund = async (distributor, customSigner = null) => {
   console.log(`Approved WETH ${approveWETH.hash}`)
 
   let sendFunds;
+  console.log(`Funding with ${distributor} as distributor`)
   if (customSigner){
     sendFunds = await distribute_contract.connect(customSigner).fund(distributor, {value: eth_qty});
   }
