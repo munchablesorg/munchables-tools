@@ -60,6 +60,11 @@ snapshot is stored in `cache/stages.json` under stage_snapshots. You can
 manually revert back to old stages by calling the node directly using a
 `evm_revert` call directly via curl.
 
+## Deleting cache
+
+To delete all script caching mechanisms, remove the directories `cache`,
+`locks`, `ignition/deployments`.
+
 ## Generating locks.csv file
 
 This file is a csv with one row for each lock action. We use `get_locks_parallel.js` below
