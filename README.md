@@ -38,7 +38,7 @@ node tools/stages/2-seal.js
 ```code
 node tools/stages/4-distribute.js
 ```
-6. Validate that everything was distributed using the final stage:
+6. Validate that everything was distributed using the next stage:
 ```code
 node tools/stages/5-validate_distribution.js
 ```
@@ -53,10 +53,11 @@ of the final distribution transaction.
 
 ## Generating locks.csv file
 
-This file is a csv with one row for each lock action
+This file is a csv with one row for each lock action. We use `get_locks_parallel.js` below
+instead of `get_locks.js` because of speed but you can use either.
 
 ```code
-node tools/locks-handler/get_locks.js
+node tools/locks-handler/get_locks_parallel.js
 ```
 
 This will write cached data to the locks directory in the format locks-<block_number>.json with every lock seen in that 
