@@ -1,6 +1,4 @@
 import {distribute_contract, usdb_contract, weth_contract} from "../../lib/contracts.js";
-import {BigNumber} from "ethers";
-
 export const approveAndFund = async (distributor, customSigner = null) => {
   const uc = (customSigner) ? usdb_contract.connect(customSigner) : usdb_contract;
   const wc = (customSigner) ? weth_contract.connect(customSigner) : weth_contract;

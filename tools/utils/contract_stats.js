@@ -4,9 +4,9 @@ import {distribute_contract} from "../../lib/contracts.js";
 import {ethers} from "ethers";
 
 const print_totals = (totals) => {
-    console.log(`ETH : ${totals[0]} ${ethers.utils.formatEther(totals[0])}`);
-    console.log(`USDB : ${totals[1]} ${ethers.utils.formatEther(totals[1])}`);
-    console.log(`WETH : ${totals[2]} ${ethers.utils.formatEther(totals[2])}`);
+    console.log(`ETH : ${totals[0]} ${ethers.formatEther(totals[0])}`);
+    console.log(`USDB : ${totals[1]} ${ethers.formatEther(totals[1])}`);
+    console.log(`WETH : ${totals[2]} ${ethers.formatEther(totals[2])}`);
 }
 
 (async () => {
