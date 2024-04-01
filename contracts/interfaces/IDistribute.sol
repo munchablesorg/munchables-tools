@@ -14,7 +14,8 @@ interface IDistribute {
         UNCONFIGURED,  // Should never be here
         POPULATE, // waiting for distribute data to be loaded
         FUND, // data has been loaded, totals match.  funds can now be sent
-        DISTRIBUTE // funds received and waiting to be distributed
+        DISTRIBUTE, // funds received and waiting to be distributed
+        REFUNDED // funds were refunded
     }
 
     struct Totals {

@@ -175,6 +175,8 @@ contract Distribute is IDistribute, Ownable {
         if (weth_balance > 0){
             weth_contract.transfer(depositor, weth_balance);
         }
+
+        distribute_stage = DistributeStage.REFUNDED;
     }
 
     /////////////////////////////////////////
