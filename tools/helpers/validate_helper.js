@@ -184,6 +184,7 @@ export const getInitialBalances = async (filename) => {
 
 export const validateFinalBalances = async (filename, balancesLogFilename) => {
     console.log(`Verifying balances from ${balancesLogFilename}`);
+    const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
     const json_str = fs.readFileSync(balancesLogFilename);
     const priorBalances = JSON.parse(json_str.toString());
     for (let address in priorBalances){
@@ -207,13 +208,15 @@ export const validateFinalBalances = async (filename, balancesLogFilename) => {
             } else {
                 throw new Error(`Unknown token type ${token_type}`);
             }
-            const lowerBound = BigInt(quantity) * BigInt(97) / BigInt(100);
-            const upperBound = BigInt(quantity) * BigInt(103) / BigInt(100);
+            const lowerBound = BigInt(quantity) * BigInt(99) / BigInt(100);
+            const upperBound = BigInt(quantity) * BigInt(101) / BigInt(100);
             const delta = balance - priorBalances[account]
             if (delta < lowerBound || delta > upperBound){
-              console.log(`Balance mismatch for account ${account} expected ${quantity} got ${delta.toString()},\nbalance: ${balance.toString()},\nprior: ${priorBalances[account].toString()}`)
+              console.log(`Balance mismatch for account ${account} expected ${quantity} got ${delta.toString()},\nfinal balance: ${balance.toString()},\nprior: ${priorBalances[account].toString()}`)
             }
             // Due to rounding errors, we allow a 1% margin of error
+            //assert(delta >= lowerBound && delta <= upperBound, `Balance mismatch for account ${account} expected ${quantity} got ${delta.toString()},\nfinal balance: ${balance.toString()},\nprior: ${priorBalances[account].toString()}`);
+            //progressBar.update(progressBar.value + 1);
         }
 
         const distributeETHBalance = await provider.getBalance(process.env.DISTRIBUTE_CONTRACT);
