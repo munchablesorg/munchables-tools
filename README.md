@@ -1,6 +1,8 @@
 
 ## Install dependencies (use node v18+)
 
+Requires : anvil 0.2.0
+
 ```code
 npm i
 ```
