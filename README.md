@@ -156,3 +156,8 @@ to then copy that address into your `.env` under the `DISTRIBUTE_CONTRACT` varia
 ```code
 node tools/fork-validation/full_test.js 
 ```
+
+For the rescue function test, run:
+```code
+node tools/fork-validation/rescue_test.js
+```
