@@ -101,7 +101,7 @@ const validateFinalBalances = async (filename) => {
     await provider.send("hardhat_setBalance", [
       process.env.DISTRIBUTE_CONTRACT_OWNER,
       // doesn't really matter how much, just needs to be enough for txn fees
-      BigNumber.from(process.env.ETH_QUANTITY),
+      BigInt(process.env.ETH_QUANTITY).toString(),
     ])
     await provider.send('hardhat_impersonateAccount', [process.env.DISTRIBUTE_CONTRACT_OWNER]);
     await provider.send('hardhat_impersonateAccount', [process.env.MSIG]);
