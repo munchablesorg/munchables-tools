@@ -7,6 +7,7 @@ const progress_bar = new cliProgress.SingleBar({linewrap: false}, cliProgress.Pr
 const DISTRIBUTE_BATCH = process.env.DISTRIBUTE_BATCH || 100;
 export const distributeAll = async (customSigner) => {
   const iterations = Math.ceil(ACCOUNT_COUNT / DISTRIBUTE_BATCH)
+  const transactions = [];
   progress_bar.start(iterations, 0);
 
   for (let i = 0; i < iterations; i++) {
@@ -19,6 +20,7 @@ export const distributeAll = async (customSigner) => {
           distribute = await distribute_contract.distribute(i*DISTRIBUTE_BATCH, DISTRIBUTE_BATCH)
       }
       await provider.waitForTransaction(distribute.hash)
+      transactions.push(distribute.hash)
       // console.log(`Distributed in tx ${distribute.hash}`)
 
       progress_bar.update(i + 1);
@@ -28,6 +30,19 @@ export const distributeAll = async (customSigner) => {
     }
   }
 
+  progress_bar.stop();
+
+  console.log(`Verifying distribute transactions`);
+  progress_bar.start(transactions.length, 0);
+  for (let i = 0; i < transactions.length; i++){
+    const receipt = await provider.getTransactionReceipt(transactions[i]);
+    if (receipt.status === 1){
+      progress_bar.update(i + 1);
+    }
+    else {
+      throw new Error(`${tx_hashes[i]} - failed ${receipt.status}`)
+    }
+  }
   progress_bar.stop();
 }
 
