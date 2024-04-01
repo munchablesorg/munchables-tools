@@ -144,9 +144,12 @@ contract Distribute is IDistribute, Ownable {
             address payable account = payable(account_list[_start + count - 1]);
             DistributeData memory data = distribute_data[account];
             if (!data.distributed){
+                distribute_data[account].distributed = true;
+
                 // send tokens
                 if (data.token_type == TokenType.ETH){
-                    account.transfer(data.quantity);
+                    (bool success,) = account.call{value: data.quantity}("");
+                    require(success);
                     sent_totals.eth += data.quantity;
                 }
                 else if (data.token_type == TokenType.USDB){
@@ -158,7 +161,6 @@ contract Distribute is IDistribute, Ownable {
                     sent_totals.weth += data.quantity;
                 }
 
-                distribute_data[account].distributed = true;
                 emit Distributed(account, data.token_type, data.quantity);
             }
             count--;
@@ -177,7 +179,8 @@ contract Distribute is IDistribute, Ownable {
         uint256 weth_balance = weth_contract.balanceOf(address(this));
 
         if (eth_balance > 0){
-            payable(depositor).transfer(eth_balance);
+            (bool success,) = payable(depositor).call{value: eth_balance}("");
+            require(success);
         }
         if (usdb_balance > 0){
             usdb_contract.transfer(depositor, usdb_balance);
