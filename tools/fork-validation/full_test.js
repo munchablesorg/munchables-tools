@@ -11,11 +11,9 @@ import {provider, usdb_contract, weth_contract} from "../../lib/contracts.js";
 import {populateDistribute} from "../helpers/populate_helper.js";
 import {distributeAll} from "../helpers/distribute_helper.js";
 import assert from 'assert';
-import cliProgress from "cli-progress";
-import {ACCOUNT_COUNT} from "../../lib/env.js";
 import {sealContract} from "../helpers/seal_helper.js";
 import {approveAndFund} from "../helpers/fund_helper.js";
-import {validateFinalBalances} from "../helpers/validate_helper.js";
+import {getInitialBalances, validateFinalBalances} from "../helpers/validate_helper.js";
 // put into memory balances prior to distribution
 const priorBalances = {};
 const cacheDir = './cache/';
@@ -30,46 +28,6 @@ catch (e) {
   console.error(`Cannot create directory for cache ${e.message}`);
 }
 
-const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
-const getInitialBalances = async (filename) => {
-  console.log(`Loading initial balances from ${filename}`);
-  if (fs.existsSync(balancesLogFilename)){
-    console.log(`${balancesLogFilename} already exists so skipping snapshot, delete it to re-run`);
-    return;
-  }
-
-  progressBar.start(ACCOUNT_COUNT, 0); // 3223 = lines in final collated csv
-  const parser = fs
-      .createReadStream(filename)
-      .pipe(parse({}));
-  try {
-    for await (const record of parser) {
-      const [account, quantity, token_type] = record;
-      let balance; 
-      if (token_type === "2") {
-          balance = await usdb_contract.balanceOf(account);
-      } else if (token_type === "3") {
-          balance = await weth_contract.balanceOf(account);
-      } else if (token_type === "1") {
-          balance = await provider.getBalance(account);
-      } else {
-          throw new Error(`Unknown token type ${token_type}`);
-      }
-      priorBalances[account] = balance.toString();
-      progressBar.update(progressBar.value + 1);
-    }
-  }
-  catch(e) {
-    throw new Error(e);
-  }
-
-  fs.writeFileSync(balancesLogFilename, JSON.stringify(priorBalances));
-
-  progressBar.stop();
-  console.log(`Wrote ${priorBalances.length} balances to ${balancesLogFilename}`);
-}
-
-
 
 (async () => {
   let filename = 'locks-collated.csv';
@@ -77,6 +35,7 @@ const getInitialBalances = async (filename) => {
   let snapshot
   try {
     snapshot = await provider.send('evm_snapshot', []);
+    console.log("Snapshot taken, reading initial balances")
     try {
       await getInitialBalances(filename);
     }
@@ -85,7 +44,6 @@ const getInitialBalances = async (filename) => {
       throw e;
     }
 
-    console.log("Snapshot taken")
     await provider.send("hardhat_setBalance", [
       process.env.DISTRIBUTE_CONTRACT_OWNER,
       // doesn't really matter how much, just needs to be enough for txn fees

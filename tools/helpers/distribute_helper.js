@@ -11,7 +11,7 @@ export const distributeAll = async (customSigner) => {
 
   for (let i = 0; i < iterations; i++) {
     try {
-      console.log(`Distributing from ${i*DISTRIBUTE_BATCH}`);
+      // console.log(`Distributing from ${i*DISTRIBUTE_BATCH}`);
       let distribute
       if (customSigner) {
           distribute = await distribute_contract.connect(customSigner).distribute(i*DISTRIBUTE_BATCH, DISTRIBUTE_BATCH)
@@ -19,10 +19,11 @@ export const distributeAll = async (customSigner) => {
           distribute = await distribute_contract.distribute(i*DISTRIBUTE_BATCH, DISTRIBUTE_BATCH)
       }
       await provider.waitForTransaction(distribute.hash)
-      console.log(`Distributed in tx ${distribute.hash}`)
+      // console.log(`Distributed in tx ${distribute.hash}`)
 
       progress_bar.update(i + 1);
     } catch (e) {
+      progress_bar.stop();
       throw new Error(`Error in distribute step: ${e}. Iteration: ${i}`)
     }
   }

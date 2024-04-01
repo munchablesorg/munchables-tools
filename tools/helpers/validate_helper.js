@@ -11,6 +11,8 @@ import fs from "fs";
 import {parse} from "csv-parse";
 import assert from "assert";
 
+const cacheDir = './cache/';
+const balancesLogFilename = `${cacheDir}balances.log.json`;
 
 export const generate_hash = (data, name = '') => {
     const stringified = data.map(d => `${d.account}:${d.quantity.toString()}:${d.token_type}`.toLowerCase());
@@ -140,6 +142,46 @@ export const getUndistributed = async () => {
     return undistributed;
 }
 
+export const getInitialBalances = async (filename) => {
+    let priorBalances = {};
+    const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+    console.log(`Loading initial balances from ${filename}`);
+    if (fs.existsSync(balancesLogFilename)){
+        console.log(`${balancesLogFilename} already exists so skipping snapshot, delete it to re-run`);
+        return;
+    }
+
+    progressBar.start(ACCOUNT_COUNT, 0); // 3223 = lines in final collated csv
+    const parser = fs
+        .createReadStream(filename)
+        .pipe(parse({}));
+    try {
+        for await (const record of parser) {
+            const [account, quantity, token_type] = record;
+            let balance;
+            if (token_type === "2") {
+                balance = await usdb_contract.balanceOf(account);
+            } else if (token_type === "3") {
+                balance = await weth_contract.balanceOf(account);
+            } else if (token_type === "1") {
+                balance = await provider.getBalance(account);
+            } else {
+                throw new Error(`Unknown token type ${token_type}`);
+            }
+            priorBalances[account] = balance.toString();
+            progressBar.update(progressBar.value + 1);
+        }
+    }
+    catch(e) {
+        throw new Error(e);
+    }
+
+    fs.writeFileSync(balancesLogFilename, JSON.stringify(priorBalances));
+
+    progressBar.stop();
+    console.log(`Wrote ${Object.values(priorBalances).length} balances to ${balancesLogFilename}`);
+}
+
 export const validateFinalBalances = async (filename, balancesLogFilename) => {
     const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
     console.log(`Verifying balances from ${balancesLogFilename}`);
@@ -178,8 +220,10 @@ export const validateFinalBalances = async (filename, balancesLogFilename) => {
         const distributeETHBalance = await provider.getBalance(process.env.DISTRIBUTE_CONTRACT);
         const distributeUSDBBalance = await usdb_contract.balanceOf(process.env.DISTRIBUTE_CONTRACT);
         const distributeWETHBalance = await weth_contract.balanceOf(process.env.DISTRIBUTE_CONTRACT);
-        assert(distributeETHBalance.toString() === "0" && distributeUSDBBalance.toString() === "0" && distributeWETHBalance.toString() === "0", `Distribute contract has remaining balance ${distributeETHBalance.toString()} ${distributeUSDBBalance.toString()} ${distributeWETHBalance.toString()}`);
-
+        assert(distributeETHBalance.toString() === "0" &&
+                distributeUSDBBalance.toString() === "0" &&
+                distributeWETHBalance.toString() === "0",
+            `Distribute contract has remaining balance ${distributeETHBalance.toString()} ${distributeUSDBBalance.toString()} ${distributeWETHBalance.toString()}`);
     }
     catch(e) {
         throw new Error(e);
