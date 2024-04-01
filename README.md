@@ -37,7 +37,8 @@ overview):
 
 ## Install dependencies (use node v18+)
 
-Requires : anvil 0.2.0
+Requires: node v18.1.0
+Requires: anvil v0.2.0 (if running local clone) 
 
 ```code
 npm i
