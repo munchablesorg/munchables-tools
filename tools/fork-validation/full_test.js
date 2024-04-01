@@ -13,7 +13,7 @@ import {distributeAll} from "../helpers/distribute_helper.js";
 import assert from 'assert';
 import {sealContract} from "../helpers/seal_helper.js";
 import {approveAndFund} from "../helpers/fund_helper.js";
-import {getInitialBalances, validateFinalBalances} from "../helpers/validate_helper.js";
+import {getInitialBalances, validateFinalBalances, getUndistributed, get_csv_hash, get_chain_hash} from "../helpers/validate_helper.js";
 // put into memory balances prior to distribution
 const priorBalances = {};
 const cacheDir = './cache/';
@@ -99,12 +99,18 @@ const stage_cache = read_stage_cache();
       process.exit(1)
     }
 
-    console.log("Populated distribution list")
     stage_cache.current_stage = STAGE_POPULATED;
     stage_cache.stage_snapshots[STAGE_POPULATED] = await provider.send('evm_snapshot', []);
     write_stage_cache(stage_cache);
+    console.log("0 - Populated funds")
+    
+    const csv_hash = await get_csv_hash(filename);
+    const chain_hash = await get_chain_hash();
+    assert(csv_hash === chain_hash, `Chain hash ${chain_hash} does not match CSV hash ${csv_hash}`)
+    console.log("1 - Validate on-chain & off-chain data")
 
     await sealContract(distributeOwner);
+    console.log("2 - Sealed contract")
 
     console.log("Sealed contract")
     stage_cache.current_stage = STAGE_SEALED;
@@ -115,6 +121,7 @@ const stage_cache = read_stage_cache();
     stage_cache.current_stage = STAGE_FUNDED;
     stage_cache.stage_snapshots[STAGE_FUNDED] = await provider.send('evm_snapshot', []);
     write_stage_cache(stage_cache);
+    console.log("3 - Approved and funded contract")
 
     const distributeETHBalance = await provider.getBalance(process.env.DISTRIBUTE_CONTRACT);
     const distributeUSDBBalance = await usdb_contract.balanceOf(process.env.DISTRIBUTE_CONTRACT);
@@ -127,16 +134,19 @@ const stage_cache = read_stage_cache();
         `${distributeETHBalance.toString()} ${distributeUSDBBalance.toString()} ${distributeWETHBalance.toString()} ` +
         `should be ${process.env.ETH_QUANTITY} ${process.env.USDB_QUANTITY} ${process.env.WETH_QUANTITY}`
     );
-
+    
     await distributeAll(distributeOwner);
-    console.log("Funds distributed");
     stage_cache.current_stage = STAGE_DISTRIBUTED;
     stage_cache.stage_snapshots[STAGE_DISTRIBUTED] = await provider.send('evm_snapshot', []);
     write_stage_cache(stage_cache);
 
+    console.log("4 - Funds distributed")
+  
+    await getUndistributed();
+    console.log("5 - Validate distribution")
     // Verify all final balances are the same
     await validateFinalBalances(filename, balancesLogFilename);
-    console.log("Fully validated end balances")
+    console.log("6 - Fully validated end balances")
   } catch (e) {
     console.error(e);
     //await provider.send('evm_revert', [snapshot]);

@@ -42,6 +42,14 @@ node tools/stages/4-distribute.js
 ```code
 node tools/stages/5-validate_distribution.js
 ```
+7. Validate the final balances check:
+```code
+node tools/stages/6-validate_balances.js
+```
+**NOTE:** This will only work consistently on a mainnet clone. On real mainnet,
+people will start to move balances around post-distribution so the only way to get this
+check to work would be by making a change to the code to accept the block number
+of the final distribution transaction.
 
 ## Generating locks.csv file
 

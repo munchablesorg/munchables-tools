@@ -12,6 +12,9 @@ const print_totals = (totals) => {
 (async () => {
     console.log(`Stats for ${process.env.DISTRIBUTE_CONTRACT} on ${process.env.BLAST_ENV}`);
 
+    const stage = await distribute_contract.distribute_stage();
+    console.log(`Stage :\t\t${stage}`);
+  
     const owner = await distribute_contract.owner();
     console.log(`Owner :\t\t${owner}`);
 
