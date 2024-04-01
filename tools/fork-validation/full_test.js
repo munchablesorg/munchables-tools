@@ -99,7 +99,7 @@ const stage_cache = read_stage_cache();
       process.exit(1)
     }
 
-    console.log("Populated funds")
+    console.log("Populated distribution list")
     stage_cache.current_stage = STAGE_POPULATED;
     stage_cache.stage_snapshots[STAGE_POPULATED] = await provider.send('evm_snapshot', []);
     write_stage_cache(stage_cache);
