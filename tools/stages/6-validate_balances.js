@@ -9,6 +9,10 @@ const balancesLogFilename = `${cacheDir}balances.log.json`;
 
 (async () => {
     console.log(`Running on ${process.env.BLAST_ENV}`);
-    await validateFinalBalances('./locks-collated.csv', balancesLogFilename);
+    let filename = 'locks-collated.csv';
+    if (process.env.BLAST_ENV === 'testnet'){
+        filename = 'locks-collated-test.csv';
+    }
+    await validateFinalBalances(filename, balancesLogFilename);
     process.exit(0);
 })();
