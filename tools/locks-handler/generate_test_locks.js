@@ -9,9 +9,13 @@ dotenv.config();
 import fs from "fs";
 import {parse} from "csv-parse";
 import HDWallet from "ethereum-hdwallet";
-import {BigNumber, ethers} from "ethers";
+import {ethers} from "ethers";
 
 const mnemonic = process.env.TESTNET_WALLET_MNEMONIC;
+if (!mnemonic){
+    console.error(`You must set TESTNET_WALLET_MNEMONIC to use this function`);
+    process.exit(1);
+}
 const hdwallet = HDWallet.fromMnemonic(mnemonic);
 const wallet = hdwallet.derive(`m/44'/60'/0'/0`);
 let wallet_index = 0;
@@ -27,19 +31,19 @@ const count_test = process.argv[2] || 500;
         .pipe(parse({}));
     let csv_data = [];
     let totals = {
-        1: BigNumber.from(0),
-        2: BigNumber.from(0),
-        3: BigNumber.from(0)
+        1: 0n,
+        2: 0n,
+        3: 0n,
     };
     for await (const record of parser) {
         // For testnet, swap account and divide quantity by 10000
         record[0] = `0x${wallet.derive(wallet_index++).getAddress().toString('hex')}`;
-        const qty_bn = BigNumber.from(record[1]);
-        record[1] =  (qty_bn.div(BigNumber.from(10000))).toString();
+        const qty_bn = BigInt(record[1]);
+        record[1] =  (qty_bn / 10000n).toString();
 
         const [account, quantity, token_type] = record;
 
-        totals[token_type] = totals[token_type].add(BigNumber.from(quantity));
+        totals[token_type] = totals[token_type] + BigInt(quantity);
 
         csv_data.push(`${account},${quantity},${token_type}`);
         if (count_test > 0 && csv_data.length >= count_test && process.env.BLAST_ENV === 'testnet'){
@@ -52,7 +56,7 @@ const count_test = process.argv[2] || 500;
     });
 
     console.log('Totals', totals);
-    console.log(`ETH : ${totals[1].toString()} ${ethers.utils.formatEther(totals[1])}`);
-    console.log(`USDB : ${totals[2].toString()} ${ethers.utils.formatEther(totals[2])}`);
-    console.log(`WETH : ${totals[3].toString()} ${ethers.utils.formatEther(totals[3])}`);
+    console.log(`ETH : ${totals[1].toString()} ${ethers.formatEther(totals[1])}`);
+    console.log(`USDB : ${totals[2].toString()} ${ethers.formatEther(totals[2])}`);
+    console.log(`WETH : ${totals[3].toString()} ${ethers.formatEther(totals[3])}`);
 })();

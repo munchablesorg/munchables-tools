@@ -3,7 +3,6 @@ import dotenv from 'dotenv';
 dotenv.config();
 import { parse } from 'csv-parse';
 import {distribute_contract, provider} from "../../lib/contracts.js";
-import {BigNumber} from "ethers";
 import cliProgress from "cli-progress";
 import {ACCOUNT_COUNT} from "../../lib/env.js";
 import {sleep} from "../../lib/sleep.js";
@@ -33,7 +32,7 @@ const publish_queue = async (queue, customSigner = null) => {
         account = queue[i].account;
         accounts.push(account);
         tokens.push(queue[i].token_type);
-        quantities.push(BigNumber.from(queue[i].quantity));
+        quantities.push(BigInt(queue[i].quantity));
     }
     // console.log(accounts, tokens, quantities)
     const res =

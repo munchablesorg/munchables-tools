@@ -2,7 +2,7 @@
  * @type import('hardhat/config').HardhatUserConfig
  */
 require("@nomicfoundation/hardhat-toolbox");
-require("@nomicfoundation/hardhat-ethers");
+// require("@nomicfoundation/hardhat-ethers");
 require("@nomicfoundation/hardhat-verify");
 // require("@nomiclabs/hardhat-etherscan");
 // require("hardhat-contract-sizer");
