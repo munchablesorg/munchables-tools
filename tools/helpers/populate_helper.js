@@ -32,15 +32,18 @@ const publish_queue = async (queue, customSigner = null) => {
         account = queue[i].account;
         accounts.push(account);
         tokens.push(queue[i].token_type);
-        quantities.push(BigInt(queue[i].quantity));
+        quantities.push(queue[i].quantity);
     }
     // console.log(accounts, tokens, quantities)
-    const res =
-      customSigner ?
-      await distribute_contract.connect(customSigner).populate(accounts, tokens, quantities) :
-      await distribute_contract.populate(accounts, tokens, quantities, {
-        gasLimit: 20000000
-      });
+    let res;
+    if (customSigner){
+        res = await distribute_contract.connect(customSigner).populate(accounts, tokens, quantities);
+    }
+    else {
+        res = await distribute_contract.populate(accounts, tokens, quantities, {
+                    gasLimit: 20000000
+                });
+    }
     // on clone network waitForTransaction hangs
     if (process.env.BLAST_ENV === 'clone'){
         await sleep(3000);
@@ -77,7 +80,7 @@ export const populateDistribute = async (filename, customSigner) => {
                 queue = [];
             }
             catch (e){
-                // progress_bar.stop()
+                progress_bar.stop()
                 console.error(`Error publishing - ${e.message}`)
                 process.exit(1)
             }
