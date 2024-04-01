@@ -1,4 +1,33 @@
 
+# Overview
+
+To distribute the funds to all users, we use the following process (high-level
+overview):
+- Read on-chain data for all locks and create file with 1 line per lock.
+- Collate that file to totals with 1 line per account.
+- Populate the contract with the data retrieved from that file.
+- Verify that the data in the contract matches the csv via a hash-check.
+- Lock the contract so that no more data can be added or changed.
+- Handover contract access to owners of Msig/Blast.
+- They will do their additional verification checks (including running local clone test) and send funds to the contract, specifying which wallet is allowed to call the distribute function in the final stage.
+    - In the case of a mistake at this stage or later, we have added a rescue
+      function that the Msig can call to retract all funds.
+- Distribute the funds via multiple distribute calls until all funds are safely sent back to users.
+- Do a last stage verification to ensure all funds have been distributed and
+  there is nothing left in the Distribute contract.
+
+## Directory structure
+`/contracts` - Holds the Distribute contract and its interfaces
+`/ignition` - Holds the deploy script for the Distribute contract
+`/lib` - Library helpers and ABI
+`/tools/fork-validation` - Full on-chain test
+`/tools/helpers` - Holds the core functionality of the different stages
+`/tools/locks-handler` - All lock retrieval functionality is held here
+`/tools/stages` - Scripts for each individual stage
+`/tools/utils` - Various utility scripts
+
+# Instructions
+
 ## Install dependencies (use node v18+)
 
 Requires : anvil 0.2.0
