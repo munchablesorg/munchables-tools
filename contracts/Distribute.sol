@@ -108,8 +108,18 @@ contract Distribute is IDistribute, Ownable {
         IERC20 usdb_contract = IERC20(USDB_CONTRACT);
         IERC20 weth_contract = IERC20(WETH_CONTRACT);
 
+        uint256 usdbBalanceBefore = usdb_contract.balanceOf(address(this));
+        uint256 wethBalanceBefore = weth_contract.balanceOf(address(this));
+
         usdb_contract.transferFrom(msg.sender, address(this), populate_totals.usdb);
         weth_contract.transferFrom(msg.sender, address(this), populate_totals.weth);
+
+        uint256 usdbBalanceAfter = usdb_contract.balanceOf(address(this));
+        uint256 wethBalanceAfter = weth_contract.balanceOf(address(this));
+        
+        // Added redundancy in balance delta checks
+        require(usdbBalanceAfter - usdbBalanceBefore == populate_totals.usdb, "USDB transfer amount mismatch");
+        require(wethBalanceAfter - wethBalanceBefore == populate_totals.weth, "WETH transfer amount mismatch");
 
         distribute_stage = DistributeStage.DISTRIBUTE;
 
