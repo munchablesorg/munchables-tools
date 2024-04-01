@@ -13,17 +13,19 @@ npx hardhat ignition deploy ignition/modules/Distribute.cjs --network
 blast_mainnet | blast_sepolia
 ```
 
-## Initiating Event Sequence (assuming already deployed Distribute contract)
+## Initiating Event Sequence
 
 0. Use `.env.example` as a reference and fill in its associated environment
-   variables to a `.env` file. This includes having an already deployed
-   `Distribute` contract.
+   variables to a `.env` file. **NOTE:** This includes having an already deployed
+   `Distribute` contract from the above step.
 1. Generate or copy over your `locks-collated.csv` file to the root of the
    directory. This can be done from scratch by using the tutorial below on
-   generating `locks.csv` and then collating the raw data.
+   generating `locks.csv` and then collating the raw data. Otherwise, we can
+   send over a copy.
 2. Run the following command to initiate data population, confirm valid data
    on-chain, and then seal the data for the next stage:
 ```code
+node tools/stages/-1-get_initial_balances.js
 node tools/stages/0-populate.js
 node tools/stages/1-validate.js
 node tools/stages/2-seal.js
@@ -50,6 +52,13 @@ node tools/stages/6-validate_balances.js
 people will start to move balances around post-distribution so the only way to get this
 check to work would be by making a change to the code to accept the block number
 of the final distribution transaction.
+
+## Stage caching
+
+Everytime a major stage of the process is successfully completed, the associated
+snapshot is stored in `cache/stages.json` under stage_snapshots. You can
+manually revert back to old stages by calling the node directly using a
+`evm_revert` call directly via curl.
 
 ## Generating locks.csv file
 

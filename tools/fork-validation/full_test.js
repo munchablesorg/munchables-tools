@@ -121,7 +121,7 @@ const stage_cache = read_stage_cache();
     stage_cache.current_stage = STAGE_FUNDED;
     stage_cache.stage_snapshots[STAGE_FUNDED] = await provider.send('evm_snapshot', []);
     write_stage_cache(stage_cache);
-    console.log("3 - Approved and funded contract")
+    console.log("3 - Approved and funded contract (msig stage)")
 
     const distributeETHBalance = await provider.getBalance(process.env.DISTRIBUTE_CONTRACT);
     const distributeUSDBBalance = await usdb_contract.balanceOf(process.env.DISTRIBUTE_CONTRACT);
@@ -143,7 +143,7 @@ const stage_cache = read_stage_cache();
     console.log("4 - Funds distributed")
   
     await getUndistributed();
-    console.log("5 - Validate distribution")
+    console.log("5 - Validated distribution")
     // Verify all final balances are the same
     //await validateFinalBalances(filename, balancesLogFilename);
     //console.log("6 - Fully validated end balances")
