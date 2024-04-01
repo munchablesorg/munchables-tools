@@ -18,6 +18,7 @@ import {getInitialBalances, validateFinalBalances} from "../helpers/validate_hel
 const priorBalances = {};
 const cacheDir = './cache/';
 const balancesLogFilename = `${cacheDir}balances.log.json`;
+const stagesCacheFilename = `${cacheDir}stages.json`;
 // make cache dir
 try {
   if (!fs.existsSync(cacheDir)) {
@@ -28,14 +29,43 @@ catch (e) {
   console.error(`Cannot create directory for cache ${e.message}`);
 }
 
+const STAGE_INIT = 0;
+const STAGE_POPULATED = 1;
+const STAGE_SEALED = 2;
+const STAGE_FUNDED = 3;
+const STAGE_DISTRIBUTED = 4;
+const write_stage_cache = (stage_cache) => {
+  fs.writeFileSync(stagesCacheFilename, JSON.stringify(stage_cache));
+}
+const read_stage_cache = () => {
+  let json;
+  if (fs.existsSync(stagesCacheFilename)){
+    json = fs.readFileSync(stagesCacheFilename);
+  }
+  let cache;
+  if (!json){
+    console.log(`First run, generating cache file`);
+    cache = {
+      current_stage: STAGE_INIT,
+      stage_snapshots: []
+    };
+  }
+  else {
+    cache = JSON.parse(json);
+  }
+  return cache;
+}
+const stage_cache = read_stage_cache();
+
 
 (async () => {
   let filename = 'locks-collated.csv';
 
   let snapshot
   try {
-    snapshot = await provider.send('evm_snapshot', []);
-    console.log("Snapshot taken, reading initial balances")
+    stage_cache.stage_snapshots[STAGE_INIT] = await provider.send('evm_snapshot', []);
+    write_stage_cache(stage_cache);
+    // console.log("Snapshot taken, reading initial balances")
     try {
       await getInitialBalances(filename);
     }
@@ -70,9 +100,21 @@ catch (e) {
     }
 
     console.log("Populated funds")
+    stage_cache.current_stage = STAGE_POPULATED;
+    stage_cache.stage_snapshots[STAGE_POPULATED] = await provider.send('evm_snapshot', []);
+    write_stage_cache(stage_cache);
+
     await sealContract(distributeOwner);
 
+    console.log("Sealed contract")
+    stage_cache.current_stage = STAGE_SEALED;
+    stage_cache.stage_snapshots[STAGE_SEALED] = await provider.send('evm_snapshot', []);
+    write_stage_cache(stage_cache);
+
     await approveAndFund(process.env.DISTRIBUTE_CONTRACT_OWNER, msigOwner);
+    stage_cache.current_stage = STAGE_FUNDED;
+    stage_cache.stage_snapshots[STAGE_FUNDED] = await provider.send('evm_snapshot', []);
+    write_stage_cache(stage_cache);
 
     const distributeETHBalance = await provider.getBalance(process.env.DISTRIBUTE_CONTRACT);
     const distributeUSDBBalance = await usdb_contract.balanceOf(process.env.DISTRIBUTE_CONTRACT);
@@ -87,7 +129,10 @@ catch (e) {
     );
 
     await distributeAll(distributeOwner);
-    console.log("Funds distributed")
+    console.log("Funds distributed");
+    stage_cache.current_stage = STAGE_DISTRIBUTED;
+    stage_cache.stage_snapshots[STAGE_DISTRIBUTED] = await provider.send('evm_snapshot', []);
+    write_stage_cache(stage_cache);
 
     // Verify all final balances are the same
     await validateFinalBalances(filename, balancesLogFilename);
@@ -97,6 +142,6 @@ catch (e) {
     //await provider.send('evm_revert', [snapshot]);
     process.exit(1);
   }
-  await provider.send('evm_revert', [snapshot]);
-  console.log("Snapshot restored")
+  // await provider.send('evm_revert', [snapshot]);
+  // console.log("Snapshot restored")
 })();
