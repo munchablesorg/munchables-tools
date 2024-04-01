@@ -80,7 +80,7 @@ const process_transfers = async (transactions) => {
     console.log(`Running from ${start_block} to ${end_block} on RPC ${process.env.NODE_URL}`);
 
     // make logs dir
-    const log_dir = `${__dirname}/../${folder_name}`;
+    const log_dir = `${__dirname}/../../${folder_name}`;
     try {
         if (!fs.existsSync(log_dir)) {
             fs.mkdirSync(log_dir);
