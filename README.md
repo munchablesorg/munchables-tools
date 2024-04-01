@@ -18,12 +18,19 @@ overview):
 
 ## Directory structure
 `/contracts` - Holds the Distribute contract and its interfaces
+
 `/ignition` - Holds the deploy script for the Distribute contract
+
 `/lib` - Library helpers and ABI
+
 `/tools/fork-validation` - Full on-chain test
+
 `/tools/helpers` - Holds the core functionality of the different stages
+
 `/tools/locks-handler` - All lock retrieval functionality is held here
+
 `/tools/stages` - Scripts for each individual stage
+
 `/tools/utils` - Various utility scripts
 
 # Instructions
@@ -106,7 +113,7 @@ node tools/locks-handler/get_locks_parallel.js
 This will write cached data to the locks directory in the format locks-<block_number>.json with every lock seen in that 
 block.
 
-get_locks can be started with `-s <block_number` as a starting block and can be run in parallel to speed up scanning.
+`get_locks.js` can be started with `-s <block_number` as a starting block and can be run in parallel to speed up scanning.
 
 ```code
 node tools/locks-handler/process_locks.js
