@@ -1,17 +1,20 @@
 import dotenv from 'dotenv';
 dotenv.config();
-import {distribute_contract} from "../lib/contracts.js";
+import {distribute_contract} from "../../lib/contracts.js";
 import {ethers} from "ethers";
 
 const print_totals = (totals) => {
-    console.log(`ETH : ${totals[0]} ${ethers.utils.formatEther(totals[0])}`);
-    console.log(`USDB : ${totals[1]} ${ethers.utils.formatEther(totals[1])}`);
-    console.log(`WETH : ${totals[2]} ${ethers.utils.formatEther(totals[2])}`);
+    console.log(`ETH : ${totals[0]} ${ethers.formatEther(totals[0])}`);
+    console.log(`USDB : ${totals[1]} ${ethers.formatEther(totals[1])}`);
+    console.log(`WETH : ${totals[2]} ${ethers.formatEther(totals[2])}`);
 }
 
 (async () => {
     console.log(`Stats for ${process.env.DISTRIBUTE_CONTRACT} on ${process.env.BLAST_ENV}`);
 
+    const stage = await distribute_contract.distribute_stage();
+    console.log(`Stage :\t\t${stage}`);
+  
     const owner = await distribute_contract.owner();
     console.log(`Owner :\t\t${owner}`);
 

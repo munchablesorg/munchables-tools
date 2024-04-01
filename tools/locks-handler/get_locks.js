@@ -1,11 +1,17 @@
-import {lock_contract, nft_contract, provider, usdb_contract, weth_contract} from "../lib/contracts.js";
-import {BigNumber, ethers} from "ethers";
-import {sleep} from "../lib/sleep.js";
+import dotenv from 'dotenv';
+dotenv.config();
+if (process.env.NODE_URL_REAL && (process.env.NODE_URL !== process.env.NODE_URL_REAL)){
+    process.env.NODE_URL = process.env.NODE_URL_REAL;
+}
+import {lock_contract, provider} from "../../lib/contracts.js";
+import {ethers} from "ethers";
+import {sleep} from "../../lib/sleep.js";
 import fs from 'fs';
-import {get_catchup_block} from "../lib/commandargs.js";
-import {Lock} from '../lib/lock.js';
+import {get_catchup_block, get_end_block} from "../../lib/commandargs.js";
+import {Lock} from '../../lib/lock.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import {END_BLOCK, START_BLOCK} from "../../lib/env.js";
 
 const eth_address = '0x0000000000000000000000000000000000000000';
 const usdb_address = "0x4300000000000000000000000000000000000003";
@@ -21,7 +27,7 @@ const __dirname = path.dirname(__filename);
 
 /* Process transfers from an incoming block containing full transfers */
 const process_transfers = async (transactions) => {
-    const iface = new ethers.utils.Interface(lock_abi);
+    const iface = new ethers.Interface(lock_abi);
     const locks = [];
 
     for (let t = 0; t < transactions.length; t++){
@@ -42,7 +48,7 @@ const process_transfers = async (transactions) => {
                 const lock = new Lock(data.args, tx_hash, tx.from);
                 if (lock.token_contract === eth_address){
                     // eth transfer
-                    if (data.value.lt(lock.quantity) || data.value.gt(lock.quantity)){
+                    if (data.value !== lock.quantity){
                         console.error(`Value mismatch on transaction ${tx_hash}`, lock.quantity, data.value, data);
                         process.exit(1);
                     }
@@ -51,7 +57,7 @@ const process_transfers = async (transactions) => {
                 locks.push(lock);
             }
             catch (e){
-                console.error(`Failed to parse tx data`, tx.hash);
+                console.error(`Failed to parse tx data`, tx.hash, e.message);
             }
         }
     }
@@ -65,11 +71,16 @@ const process_transfers = async (transactions) => {
 (async () => {
     let start_block = get_catchup_block(); // from command line as -s <block_number>
     if (!start_block){
-        start_block = 1132211; // first lock
+        start_block = START_BLOCK; // first lock
     }
+    let end_block = get_end_block(); // from command line as -e <block_number>
+    if (!end_block){
+        end_block = END_BLOCK;
+    }
+    console.log(`Running from ${start_block} to ${end_block} on RPC ${process.env.NODE_URL}`);
 
     // make logs dir
-    const log_dir = `${__dirname}/../${folder_name}`;
+    const log_dir = `${__dirname}/../../${folder_name}`;
     try {
         if (!fs.existsSync(log_dir)) {
             fs.mkdirSync(log_dir);
@@ -79,8 +90,7 @@ const process_transfers = async (transactions) => {
         console.error(`Cannot create directory for logs ${e.message}`);
     }
 
-    const end_block = 1344734;
-    const iface = new ethers.utils.Interface(lock_abi);
+    const iface = new ethers.Interface(lock_abi);
 
     //////////////////////////////////////
     // loop every block and get the transactions
@@ -97,7 +107,7 @@ const process_transfers = async (transactions) => {
             //////////////////////////////////////
             let block, new_locks = [];
             try {
-                block = await provider.getBlockWithTransactions(block_number);
+                block = await provider.getBlock(block_number, true);
             }
             catch (e){
                 console.error(`Error fetching block ${block_number} with tx`, e.message);
@@ -107,7 +117,7 @@ const process_transfers = async (transactions) => {
             //////////////////////////////////////
             // fetch data from those blocks for our lock transactions
             //////////////////////////////////////
-            new_locks = await process_transfers(block.transactions);
+            new_locks = await process_transfers(block.prefetchedTransactions);
 
             //////////////////////////////////////
             // get events to match, for inline and belt and braces
@@ -142,15 +152,18 @@ const process_transfers = async (transactions) => {
             // write out log file with raw (json encoded lock data)
             //////////////////////////////////////
             if (new_locks.length){
+                const locks_json = JSON.stringify(new_locks, (key, value) =>
+                    typeof value === 'bigint'
+                        ? value.toString()
+                        : value
+                );
+                if (locks_json === ''){
+                    console.error(`Invalid JSON`, new_locks);
+                    process.exit(1);
+                }
                 const log_filename = `${folder_name}/locks-${block_number}.json`;
-                fs.writeFile(log_filename, JSON.stringify(new_locks), (err, data) => {
-                    if (err){
-                        console.error(`Error writing log for ${block_number} ${err.message}`);
-                    }
-                    else {
-                        console.log(`Wrote ${log_filename}`);
-                    }
-                });
+                fs.writeFileSync(log_filename, locks_json);
+                console.log(`Wrote ${log_filename}`);
             }
         }
         catch (e){
@@ -159,4 +172,6 @@ const process_transfers = async (transactions) => {
             block_number--;
         }
     }
+
+    process.exit(0);
 })();

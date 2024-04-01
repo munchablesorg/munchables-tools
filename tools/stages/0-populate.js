@@ -2,7 +2,6 @@
 Populates the DISTRIBUTE_CONTRACT with data from the locks-collated.csv file
  */
 
-import fs from "fs";
 import dotenv from 'dotenv';
 dotenv.config();
 import { populateDistribute } from "../helpers/populate_helper.js";

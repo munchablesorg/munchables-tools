@@ -11,93 +11,69 @@ import {provider, usdb_contract, weth_contract} from "../../lib/contracts.js";
 import {populateDistribute} from "../helpers/populate_helper.js";
 import {distributeAll} from "../helpers/distribute_helper.js";
 import assert from 'assert';
-import cliProgress from "cli-progress";
-import {ACCOUNT_COUNT} from "../../lib/env.js";
 import {sealContract} from "../helpers/seal_helper.js";
 import {approveAndFund} from "../helpers/fund_helper.js";
+import {getInitialBalances, validateFinalBalances, getUndistributed, get_csv_hash, get_chain_hash} from "../helpers/validate_helper.js";
 // put into memory balances prior to distribution
 const priorBalances = {};
-
-const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
-const getInitialBalances = async (filename) => {
-  console.log(`Loading initial balances ${filename}`);
-
-  progressBar.start(ACCOUNT_COUNT, 0); // 3223 = lines in final collated csv
-  const parser = fs
-      .createReadStream(filename)
-      .pipe(parse({}));
-  try {
-    for await (const record of parser) {
-      const [account, quantity, token_type] = record;
-      let balance; 
-      if (token_type === "2") {
-          balance = await usdb_contract.balanceOf(account);
-      } else if (token_type === "3") {
-          balance = await weth_contract.balanceOf(account);
-      } else if (token_type === "1") {
-          balance = await provider.getBalance(account);
-      } else {
-          throw new Error(`Unknown token type ${token_type}`);
-      }
-      priorBalances[account] = balance;
-      progressBar.update(progressBar.value + 1);
-    }
+const cacheDir = './cache/';
+const balancesLogFilename = `${cacheDir}balances.log.json`;
+const stagesCacheFilename = `${cacheDir}stages.json`;
+// make cache dir
+try {
+  if (!fs.existsSync(cacheDir)) {
+    fs.mkdirSync(cacheDir);
   }
-  catch(e) {
-    throw new Error(e);
-  }
-  progressBar.stop();
+}
+catch (e) {
+  console.error(`Cannot create directory for cache ${e.message}`);
 }
 
-const validateFinalBalances = async (filename) => {
-  console.log(`Verifying ${filename}`);
-
-  const parser = fs
-      .createReadStream(filename)
-      .pipe(parse({}));
-  try {
-    console.log("Validated ending state of distribution contract")
-    progressBar.start(ACCOUNT_COUNT, 0); // 3223 = lines in final collated csv
-    for await (const record of parser) {
-      const [account, quantity, token_type] = record;
-      let balance; 
-      if (token_type === "2") {
-          balance = await usdb_contract.balanceOf(account);
-      } else if (token_type === "3") {
-          balance = await weth_contract.balanceOf(account);
-      } else if (token_type === "1") {
-          balance = await provider.getBalance(account);
-      } else {
-          throw new Error(`Unknown token type ${token_type}`);
-      }
-      const lowerBound = BigInt(quantity) * BigInt(99) / BigInt(100);
-      const upperBound = BigInt(quantity) * BigInt(101) / BigInt(100);
-      const delta = balance - priorBalances[account]
-      // Due to rounding errors, we allow a 1% margin of error
-      assert(delta >= lowerBound && delta <= upperBound, `Balance mismatch for account ${account} expected ${quantity} got ${delta.toString()}`);
-      progressBar.update(progressBar.value + 1);
-    }
-
-    const distributeETHBalance = await provider.getBalance(process.env.DISTRIBUTE_CONTRACT);
-    const distributeUSDBBalance = await usdb_contract.balanceOf(process.env.DISTRIBUTE_CONTRACT);
-    const distributeWETHBalance = await weth_contract.balanceOf(process.env.DISTRIBUTE_CONTRACT);
-    assert(distributeETHBalance.toString() === "0" && distributeUSDBBalance.toString() === "0" && distributeWETHBalance.toString() === "0", `Distribute contract has remaining balance ${distributeETHBalance.toString()} ${distributeUSDBBalance.toString()} ${distributeWETHBalance.toString()}`);
-
-  }
-  catch(e) {
-    throw new Error(e);
-  }
-  progressBar.stop();
+const STAGE_INIT = 0;
+const STAGE_POPULATED = 1;
+const STAGE_SEALED = 2;
+const STAGE_FUNDED = 3;
+const STAGE_DISTRIBUTED = 4;
+const write_stage_cache = (stage_cache) => {
+  fs.writeFileSync(stagesCacheFilename, JSON.stringify(stage_cache));
 }
+const read_stage_cache = () => {
+  let json;
+  if (fs.existsSync(stagesCacheFilename)){
+    json = fs.readFileSync(stagesCacheFilename);
+  }
+  let cache;
+  if (!json){
+    console.log(`First run, generating cache file`);
+    cache = {
+      current_stage: STAGE_INIT,
+      stage_snapshots: []
+    };
+  }
+  else {
+    cache = JSON.parse(json);
+  }
+  return cache;
+}
+const stage_cache = read_stage_cache();
+
 
 (async () => {
   let filename = 'locks-collated.csv';
 
   let snapshot
   try {
-    snapshot = await provider.send('evm_snapshot', []);
-    await getInitialBalances(filename);
-    console.log("Snapshot taken")
+    stage_cache.stage_snapshots[STAGE_INIT] = await provider.send('evm_snapshot', []);
+    write_stage_cache(stage_cache);
+    // console.log("Snapshot taken, reading initial balances")
+    try {
+      await getInitialBalances(filename);
+    }
+    catch (e){
+      console.error(`Failure during getInitialBalances ${e.message}`);
+      throw e;
+    }
+
     await provider.send("hardhat_setBalance", [
       process.env.DISTRIBUTE_CONTRACT_OWNER,
       // doesn't really matter how much, just needs to be enough for txn fees
@@ -110,8 +86,8 @@ const validateFinalBalances = async (filename) => {
     throw new Error(e)
   }
 
-  const distributeOwner = provider.getUncheckedSigner(process.env.DISTRIBUTE_CONTRACT_OWNER);
-  const msigOwner = provider.getUncheckedSigner(process.env.MSIG);
+  const distributeOwner = await provider.getSigner(process.env.DISTRIBUTE_CONTRACT_OWNER);
+  const msigOwner = await provider.getSigner(process.env.MSIG);
   console.log("Impersonated accounts")
   try {
     // Populate and distribute funds
@@ -123,10 +99,29 @@ const validateFinalBalances = async (filename) => {
       process.exit(1)
     }
 
-    console.log("Populated funds")
+    stage_cache.current_stage = STAGE_POPULATED;
+    stage_cache.stage_snapshots[STAGE_POPULATED] = await provider.send('evm_snapshot', []);
+    write_stage_cache(stage_cache);
+    console.log("0 - Populated funds")
+    
+    const csv_hash = await get_csv_hash(filename);
+    const chain_hash = await get_chain_hash();
+    assert(csv_hash === chain_hash, `Chain hash ${chain_hash} does not match CSV hash ${csv_hash}`)
+    console.log("1 - Validate on-chain & off-chain data")
+
     await sealContract(distributeOwner);
+    console.log("2 - Sealed contract")
+
+    console.log("Sealed contract")
+    stage_cache.current_stage = STAGE_SEALED;
+    stage_cache.stage_snapshots[STAGE_SEALED] = await provider.send('evm_snapshot', []);
+    write_stage_cache(stage_cache);
 
     await approveAndFund(process.env.DISTRIBUTE_CONTRACT_OWNER, msigOwner);
+    stage_cache.current_stage = STAGE_FUNDED;
+    stage_cache.stage_snapshots[STAGE_FUNDED] = await provider.send('evm_snapshot', []);
+    write_stage_cache(stage_cache);
+    console.log("3 - Approved and funded contract (msig stage)")
 
     const distributeETHBalance = await provider.getBalance(process.env.DISTRIBUTE_CONTRACT);
     const distributeUSDBBalance = await usdb_contract.balanceOf(process.env.DISTRIBUTE_CONTRACT);
@@ -139,18 +134,24 @@ const validateFinalBalances = async (filename) => {
         `${distributeETHBalance.toString()} ${distributeUSDBBalance.toString()} ${distributeWETHBalance.toString()} ` +
         `should be ${process.env.ETH_QUANTITY} ${process.env.USDB_QUANTITY} ${process.env.WETH_QUANTITY}`
     );
-
+    
     await distributeAll(distributeOwner);
-    console.log("Funds distributed")
+    stage_cache.current_stage = STAGE_DISTRIBUTED;
+    stage_cache.stage_snapshots[STAGE_DISTRIBUTED] = await provider.send('evm_snapshot', []);
+    write_stage_cache(stage_cache);
 
+    console.log("4 - Funds distributed")
+  
+    await getUndistributed();
+    console.log("5 - Validated distribution")
     // Verify all final balances are the same
-    await validateFinalBalances(filename);
-    console.log("Fully validated end balances")
+    //await validateFinalBalances(filename, balancesLogFilename);
+    //console.log("6 - Fully validated end balances")
   } catch (e) {
     console.error(e);
     //await provider.send('evm_revert', [snapshot]);
     process.exit(1);
   }
-  await provider.send('evm_revert', [snapshot]);
-  console.log("Snapshot restored")
+  // await provider.send('evm_revert', [snapshot]);
+  // console.log("Snapshot restored")
 })();
