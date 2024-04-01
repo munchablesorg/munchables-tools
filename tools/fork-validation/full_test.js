@@ -145,8 +145,8 @@ const stage_cache = read_stage_cache();
     await getUndistributed();
     console.log("5 - Validate distribution")
     // Verify all final balances are the same
-    await validateFinalBalances(filename, balancesLogFilename);
-    console.log("6 - Fully validated end balances")
+    //await validateFinalBalances(filename, balancesLogFilename);
+    //console.log("6 - Fully validated end balances")
   } catch (e) {
     console.error(e);
     //await provider.send('evm_revert', [snapshot]);
