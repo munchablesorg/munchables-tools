@@ -104,6 +104,7 @@ contract Distribute is IDistribute, Ownable {
 
     function fund(address _distributor) external payable onlyFundStage {
         require(msg.value == populate_totals.eth, "ETH total incorrect");
+        
         // ETH is here, now transfer the ERC-20s
         IERC20 usdb_contract = IERC20(USDB_CONTRACT);
         IERC20 weth_contract = IERC20(WETH_CONTRACT);
@@ -122,9 +123,18 @@ contract Distribute is IDistribute, Ownable {
         require(wethBalanceAfter - wethBalanceBefore == populate_totals.weth, "WETH transfer amount mismatch");
 
         distribute_stage = DistributeStage.DISTRIBUTE;
-
         depositor = msg.sender;
         distributor = _distributor;
+
+        // ETH is here, now transfer the ERC-20s
+        if (populate_totals.usdb > 0){
+            IERC20 usdb_contract = IERC20(USDB_CONTRACT);
+            usdb_contract.transferFrom(msg.sender, address(this), populate_totals.usdb);
+        }
+        if (populate_totals.weth > 0){
+            IERC20 weth_contract = IERC20(WETH_CONTRACT);
+            weth_contract.transferFrom(msg.sender, address(this), populate_totals.weth);
+        }
 
         emit Funded(depositor, distributor);
     }
@@ -148,17 +158,18 @@ contract Distribute is IDistribute, Ownable {
 
                 // send tokens
                 if (data.token_type == TokenType.ETH){
-                    (bool success,) = account.call{value: data.quantity}("");
-                    require(success);
                     sent_totals.eth += data.quantity;
+
+                    (bool success,) = account.call{value: data.quantity}("");
+                    require(success, "ETH transfer failed");
                 }
                 else if (data.token_type == TokenType.USDB){
                     usdb_contract.transfer(account, data.quantity);
                     sent_totals.usdb += data.quantity;
                 }
                 else if (data.token_type == TokenType.WETH){
-                    weth_contract.transfer(account, data.quantity);
                     sent_totals.weth += data.quantity;
+                    weth_contract.transfer(account, data.quantity);
                 }
 
                 emit Distributed(account, data.token_type, data.quantity);
@@ -179,8 +190,8 @@ contract Distribute is IDistribute, Ownable {
         uint256 weth_balance = weth_contract.balanceOf(address(this));
 
         if (eth_balance > 0){
-            (bool success,) = payable(depositor).call{value: eth_balance}("");
-            require(success);
+            (bool success,) = payable(depositor).call{value: data.quantity}("");
+            require(success, "ETH transfer failed");
         }
         if (usdb_balance > 0){
             usdb_contract.transfer(depositor, usdb_balance);

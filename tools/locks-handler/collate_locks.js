@@ -5,6 +5,7 @@ populate script
 import fs from 'node:fs';
 import { parse } from 'csv-parse';
 import {ethers} from "ethers";
+import {LOCK_COLLATED_FILE, LOCKS_FILE} from "../../lib/env.js";
 const __dirname = new URL('.', import.meta.url).pathname;
 
 const symbol_to_id = (sym) => {
@@ -23,7 +24,7 @@ const symbol_to_id = (sym) => {
 (async () => {
     const accounts = {};
     const parser = fs
-        .createReadStream(`${__dirname}../../locks.csv`)
+        .createReadStream(`${__dirname}../../${LOCKS_FILE}`)
         .pipe(parse({
             // CSV options if any
         }));
@@ -47,7 +48,7 @@ const symbol_to_id = (sym) => {
         3: 0n,
     }
     let collated_csv = '';
-    const collated_filename = 'locks-collated.csv';
+    const collated_filename = LOCK_COLLATED_FILE;
     for (const account in accounts) {
         const data = accounts[account];
         totals[data.token_type] += data.quantity;

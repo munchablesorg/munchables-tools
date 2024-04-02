@@ -18,19 +18,27 @@ overview):
 
 ## Directory structure
 `/contracts` - Holds the Distribute contract and its interfaces
+
 `/ignition` - Holds the deploy script for the Distribute contract
+
 `/lib` - Library helpers and ABI
+
 `/tools/fork-validation` - Full on-chain test
+
 `/tools/helpers` - Holds the core functionality of the different stages
+
 `/tools/locks-handler` - All lock retrieval functionality is held here
+
 `/tools/stages` - Scripts for each individual stage
+
 `/tools/utils` - Various utility scripts
 
 # Instructions
 
 ## Install dependencies (use node v18+)
 
-Requires : anvil 0.2.0
+Requires: node v18.1.0
+Requires: anvil v0.2.0 (if running local clone) 
 
 ```code
 npm i
@@ -82,13 +90,6 @@ people will start to move balances around post-distribution so the only way to g
 check to work would be by making a change to the code to accept the block number
 of the final distribution transaction.
 
-## Stage caching
-
-Everytime a major stage of the process is successfully completed, the associated
-snapshot is stored in `cache/stages.json` under stage_snapshots. You can
-manually revert back to old stages by calling the node directly using a
-`evm_revert` call directly via curl.
-
 ## Deleting cache
 
 To delete all script caching mechanisms, remove the directories `cache`,
@@ -106,7 +107,7 @@ node tools/locks-handler/get_locks_parallel.js
 This will write cached data to the locks directory in the format locks-<block_number>.json with every lock seen in that 
 block.
 
-get_locks can be started with `-s <block_number` as a starting block and can be run in parallel to speed up scanning.
+get_locks can be started with `-s <block_number` as a starting block for manual scanning.
 
 ```code
 node tools/locks-handler/process_locks.js
@@ -122,25 +123,6 @@ The raw data needs to be collated to just have the data we need and to be a sing
 node tools/locks-handler/collate_locks.js
 ```
 This will write out `locks-collated.csv` which will be needed to populate the contract.
-
-## Populating contract
-
-The populate script will read data from `locks-collated.csv` and send them to the contract, you must have the owner key 
-to populate.
-
-```code
-node tools/stages/0-populate.js
-```
-
-## Verifying contract state
-
-The verification script will compare all the data in the contract to your local `locks-collated.csv` file, this is done 
-by hashing all of the addresses, quantities and token types from the contract data and the csv file.
-    
-```code
-node tools/stages/1-validate.js
-```
-Once the contract state is validated, the contract should be able to be sealed and will then wait for funding.
 
 ## Testing on a cloned mainnet
 
@@ -161,3 +143,8 @@ For the rescue function test, run:
 ```code
 node tools/fork-validation/rescue_test.js
 ```
+
+Everytime a major stage of the process is successfully completed, the associated
+snapshot is stored in `cache/stages.json` under stage_snapshots. You can
+manually revert back to old stages by passing the snapshot hex identifier to
+`tools/utils/revert_snapshot.js <snapshot>`.
