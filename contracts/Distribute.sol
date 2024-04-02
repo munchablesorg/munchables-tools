@@ -103,18 +103,21 @@ contract Distribute is IDistribute, Ownable {
     }
 
     function fund(address _distributor) external payable onlyFundStage {
-        require(msg.value > 0 && msg.value == populate_totals.eth, "ETH total incorrect");
-        // ETH is here, now transfer the ERC-20s
-        IERC20 usdb_contract = IERC20(USDB_CONTRACT);
-        IERC20 weth_contract = IERC20(WETH_CONTRACT);
-
-        usdb_contract.transferFrom(msg.sender, address(this), populate_totals.usdb);
-        weth_contract.transferFrom(msg.sender, address(this), populate_totals.weth);
+        require(msg.value == populate_totals.eth, "ETH total incorrect");
 
         distribute_stage = DistributeStage.DISTRIBUTE;
-
         depositor = msg.sender;
         distributor = _distributor;
+
+        // ETH is here, now transfer the ERC-20s
+        if (populate_totals.usdb > 0){
+            IERC20 usdb_contract = IERC20(USDB_CONTRACT);
+            usdb_contract.transferFrom(msg.sender, address(this), populate_totals.usdb);
+        }
+        if (populate_totals.weth > 0){
+            IERC20 weth_contract = IERC20(WETH_CONTRACT);
+            weth_contract.transferFrom(msg.sender, address(this), populate_totals.weth);
+        }
 
         emit Funded(depositor, distributor);
     }
