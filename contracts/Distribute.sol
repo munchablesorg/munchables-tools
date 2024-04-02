@@ -126,16 +126,6 @@ contract Distribute is IDistribute, Ownable {
         depositor = msg.sender;
         distributor = _distributor;
 
-        // ETH is here, now transfer the ERC-20s
-        if (populate_totals.usdb > 0){
-            IERC20 usdb_contract = IERC20(USDB_CONTRACT);
-            usdb_contract.transferFrom(msg.sender, address(this), populate_totals.usdb);
-        }
-        if (populate_totals.weth > 0){
-            IERC20 weth_contract = IERC20(WETH_CONTRACT);
-            weth_contract.transferFrom(msg.sender, address(this), populate_totals.weth);
-        }
-
         emit Funded(depositor, distributor);
     }
 
@@ -190,7 +180,7 @@ contract Distribute is IDistribute, Ownable {
         uint256 weth_balance = weth_contract.balanceOf(address(this));
 
         if (eth_balance > 0){
-            (bool success,) = payable(depositor).call{value: data.quantity}("");
+            (bool success,) = payable(depositor).call{value: eth_balance}("");
             require(success, "ETH transfer failed");
         }
         if (usdb_balance > 0){
