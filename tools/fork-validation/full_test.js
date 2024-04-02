@@ -5,8 +5,6 @@ Populates the DISTRIBUTE_CONTRACT with data from the locks-collated.csv file
 import fs from "fs";
 import dotenv from 'dotenv';
 dotenv.config();
-import { parse } from 'csv-parse';
-import {BigNumber} from "ethers";
 import {provider, usdb_contract, weth_contract} from "../../lib/contracts.js";
 import {populateDistribute} from "../helpers/populate_helper.js";
 import {distributeAll} from "../helpers/distribute_helper.js";
