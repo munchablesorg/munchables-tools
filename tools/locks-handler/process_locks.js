@@ -3,6 +3,7 @@ import path from "path";
 import {Lock} from '../../lib/lock.js';
 import {ethers} from "ethers";
 import {provider, usdb_contract, weth_contract} from "../../lib/contracts.js";
+import {LOCKS_FILE} from "../../lib/env.js";
 
 
 (async () => {
@@ -36,7 +37,7 @@ import {provider, usdb_contract, weth_contract} from "../../lib/contracts.js";
             });
         }
 
-        fs.writeFile('locks.csv', csv, () => {
+        fs.writeFile(LOCKS_FILE, csv, () => {
             console.log(`Wrote csv to locks.csv`);
         });
 

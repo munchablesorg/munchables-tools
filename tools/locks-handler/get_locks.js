@@ -11,7 +11,7 @@ import {get_catchup_block, get_end_block} from "../../lib/commandargs.js";
 import {Lock} from '../../lib/lock.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import {END_BLOCK, START_BLOCK} from "../../lib/env.js";
+import {END_BLOCK, LOCK_DIR, START_BLOCK} from "../../lib/env.js";
 
 const eth_address = '0x0000000000000000000000000000000000000000';
 const usdb_address = "0x4300000000000000000000000000000000000003";
@@ -21,7 +21,7 @@ export const lock_abi = [
     `function lock(address _token_contract, uint256 _quantity, uint256 _lock_duration)`,
     `event Locked(address indexed _account, address indexed _token_contract, uint256 _quantity, uint256 _lock_duration, uint256 _unlock_time, uint256 _lock_remainder, uint256 _nft_drop_cost, uint256 _nft_drop)`,
 ];
-const folder_name = 'locks';
+const folder_name = LOCK_DIR;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 

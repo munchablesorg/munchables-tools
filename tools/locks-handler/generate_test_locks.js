@@ -10,6 +10,7 @@ import fs from "fs";
 import {parse} from "csv-parse";
 import HDWallet from "ethereum-hdwallet";
 import {ethers} from "ethers";
+import {LOCK_COLLATED_FILE, LOCK_COLLATED_TESTNET_FILE} from "../../lib/env.js";
 
 const mnemonic = process.env.TESTNET_WALLET_MNEMONIC;
 if (!mnemonic){
@@ -22,8 +23,8 @@ let wallet_index = 0;
 const count_test = process.argv[2] || 500;
 
 (async () => {
-    const infile = './locks-collated.csv';
-    const outfile = './locks-collated-test.csv';
+    const infile = LOCK_COLLATED_FILE;
+    const outfile = LOCK_COLLATED_TESTNET_FILE;
 
     console.log(`Creating test lock file with controlled accounts and lower quantities, ${count_test} rows`);
     const parser = fs

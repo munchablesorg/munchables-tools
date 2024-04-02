@@ -3,12 +3,13 @@ Validates that the locks-collated.csv file data and the chain data match exactly
  */
 
 import { get_csv_hash, get_chain_hash } from '../helpers/validate_helper.js';
+import {LOCK_COLLATED_FILE, LOCK_COLLATED_TESTNET_FILE} from "../../lib/env.js";
 
 (async () => {
     console.log(`Running on ${process.env.BLAST_ENV}`);
-    let filename = 'locks-collated.csv';
+    let filename = LOCK_COLLATED_FILE;
     if (process.env.BLAST_ENV === 'testnet'){
-        filename = 'locks-collated-test.csv';
+        filename = LOCK_COLLATED_TESTNET_FILE;
     }
     const csv_hash = await get_csv_hash(filename);
     const chain_hash = await get_chain_hash();

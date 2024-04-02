@@ -1,9 +1,10 @@
 import {getInitialBalances} from "../helpers/validate_helper.js";
+import {LOCK_COLLATED_FILE, LOCK_COLLATED_TESTNET_FILE} from "../../lib/env.js";
 
 (async () => {
-    let filename = 'locks-collated.csv';
+    let filename = LOCK_COLLATED_FILE;
     if (process.env.BLAST_ENV === 'testnet'){
-        filename = 'locks-collated-test.csv';
+        filename = LOCK_COLLATED_TESTNET_FILE;
     }
     try {
         await getInitialBalances(filename);
