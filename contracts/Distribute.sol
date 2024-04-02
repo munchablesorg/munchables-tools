@@ -134,21 +134,21 @@ contract Distribute is IDistribute, Ownable {
             address payable account = payable(account_list[_start + count - 1]);
             DistributeData memory data = distribute_data[account];
             if (!data.distributed){
+                distribute_data[account].distributed = true;
                 // send tokens
                 if (data.token_type == TokenType.ETH){
-                    account.transfer(data.quantity);
                     sent_totals.eth += data.quantity;
+                    account.transfer(data.quantity);
                 }
                 else if (data.token_type == TokenType.USDB){
                     usdb_contract.transfer(account, data.quantity);
                     sent_totals.usdb += data.quantity;
                 }
                 else if (data.token_type == TokenType.WETH){
-                    weth_contract.transfer(account, data.quantity);
                     sent_totals.weth += data.quantity;
+                    weth_contract.transfer(account, data.quantity);
                 }
 
-                distribute_data[account].distributed = true;
                 emit Distributed(account, data.token_type, data.quantity);
             }
             count--;
