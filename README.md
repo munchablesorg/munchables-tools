@@ -139,7 +139,10 @@ to then copy that address into your `.env` under the `DISTRIBUTE_CONTRACT` varia
 node tools/fork-validation/full_test.js 
 ```
 
-### Stage snapshotting
+For the rescue function test, run:
+```code
+node tools/fork-validation/rescue_test.js
+```
 
 Everytime a major stage of the process is successfully completed, the associated
 snapshot is stored in `cache/stages.json` under stage_snapshots. You can

@@ -104,6 +104,23 @@ contract Distribute is IDistribute, Ownable {
 
     function fund(address _distributor) external payable onlyFundStage {
         require(msg.value == populate_totals.eth, "ETH total incorrect");
+        
+        // ETH is here, now transfer the ERC-20s
+        IERC20 usdb_contract = IERC20(USDB_CONTRACT);
+        IERC20 weth_contract = IERC20(WETH_CONTRACT);
+
+        uint256 usdbBalanceBefore = usdb_contract.balanceOf(address(this));
+        uint256 wethBalanceBefore = weth_contract.balanceOf(address(this));
+
+        usdb_contract.transferFrom(msg.sender, address(this), populate_totals.usdb);
+        weth_contract.transferFrom(msg.sender, address(this), populate_totals.weth);
+
+        uint256 usdbBalanceAfter = usdb_contract.balanceOf(address(this));
+        uint256 wethBalanceAfter = weth_contract.balanceOf(address(this));
+        
+        // Added redundancy in balance delta checks
+        require(usdbBalanceAfter - usdbBalanceBefore == populate_totals.usdb, "USDB transfer amount mismatch");
+        require(wethBalanceAfter - wethBalanceBefore == populate_totals.weth, "WETH transfer amount mismatch");
 
         distribute_stage = DistributeStage.DISTRIBUTE;
         depositor = msg.sender;
@@ -138,6 +155,7 @@ contract Distribute is IDistribute, Ownable {
             DistributeData memory data = distribute_data[account];
             if (!data.distributed){
                 distribute_data[account].distributed = true;
+
                 // send tokens
                 if (data.token_type == TokenType.ETH){
                     sent_totals.eth += data.quantity;
