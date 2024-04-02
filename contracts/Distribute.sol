@@ -141,7 +141,9 @@ contract Distribute is IDistribute, Ownable {
                 // send tokens
                 if (data.token_type == TokenType.ETH){
                     sent_totals.eth += data.quantity;
-                    account.transfer(data.quantity);
+
+                    (bool success,) = account.call{value: data.quantity}("");
+                    require(success, "ETH transfer failed");
                 }
                 else if (data.token_type == TokenType.USDB){
                     usdb_contract.transfer(account, data.quantity);
@@ -170,7 +172,8 @@ contract Distribute is IDistribute, Ownable {
         uint256 weth_balance = weth_contract.balanceOf(address(this));
 
         if (eth_balance > 0){
-            payable(depositor).transfer(eth_balance);
+            (bool success,) = payable(depositor).call{value: data.quantity}("");
+            require(success, "ETH transfer failed");
         }
         if (usdb_balance > 0){
             usdb_contract.transfer(depositor, usdb_balance);
