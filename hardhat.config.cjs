@@ -31,7 +31,7 @@ module.exports = {
         network: "blast_mainnet",
         chainId: 81457,
         urls: {
-          apiURL: process.env.NODE_URL,
+          apiURL: "https://api.blastscan.io/api",
           browserURL: "https://blastexplorer.io"
         }
       }
