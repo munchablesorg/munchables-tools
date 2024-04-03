@@ -1,7 +1,7 @@
 import fs from 'fs';
 import readline from 'readline'
 
-const inputFile = 'locks-collate.csv';
+const inputFile = 'locks-collated.csv';
 
 // Totals for each currency
 let totalETH = BigInt(0);
