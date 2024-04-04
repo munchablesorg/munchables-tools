@@ -1,4 +1,4 @@
-import {ACCOUNT_COUNT, LOCKS_FILE} from "../../lib/env.js";
+import {LOCKS_FILE} from "../../lib/env.js";
 import fs from "fs";
 import {parse} from "csv-parse";
 import {provider} from "../../lib/contracts.js";
@@ -35,7 +35,7 @@ import cliProgress from "cli-progress";
 
     console.log(`Found ${processed_locks.length} locks`);
 
-    const ten_bil = 1n.pow(9);
+    const ten_bil = 1000000000n;
     for (let i = 0; i < processed_locks.length; i++) {
         const sym = processed_locks[i].symbol.toLowerCase();
 
