@@ -154,8 +154,8 @@ contract Distribute is IDistribute, Ownable {
                     require(success, "ETH transfer failed");
                 }
                 else if (data.token_type == TokenType.USDB){
-                    usdb_contract.transfer(account, data.quantity);
                     sent_totals.usdb += data.quantity;
+                    usdb_contract.transfer(account, data.quantity);
                 }
                 else if (data.token_type == TokenType.WETH){
                     sent_totals.weth += data.quantity;
@@ -171,6 +171,8 @@ contract Distribute is IDistribute, Ownable {
     function rescue() external onlyDistributeStage {
         require(depositor != address(0), "Deposit not sent yet");
         require(msg.sender == depositor, "Only depositor can rescue");
+
+        distribute_stage = DistributeStage.REFUNDED;
 
         IERC20 usdb_contract = IERC20(USDB_CONTRACT);
         IERC20 weth_contract = IERC20(WETH_CONTRACT);
@@ -189,8 +191,6 @@ contract Distribute is IDistribute, Ownable {
         if (weth_balance > 0){
             weth_contract.transfer(depositor, weth_balance);
         }
-
-        distribute_stage = DistributeStage.REFUNDED;
     }
 
     /////////////////////////////////////////
