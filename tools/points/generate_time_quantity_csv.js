@@ -1,4 +1,4 @@
-import {ACCOUNT_COUNT, LOCKS_FILE} from "../../lib/env.js";
+import {LOCKS_FILE} from "../../lib/env.js";
 import fs from "fs";
 import {parse} from "csv-parse";
 import {provider} from "../../lib/contracts.js";
