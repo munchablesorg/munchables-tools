@@ -26,7 +26,7 @@ import cliProgress from "cli-progress";
 
         const sym = symbol.toLowerCase();
         quantity_total[sym] += BigInt(quantity);
-        const time_exp = BigInt(Math.pow(lock_time, TIME_EXPONENT));
+        const time_exp = BigInt(lock_time) ** BigInt(TIME_EXPONENT);
         time_exp_total[sym] += time_exp;
 
         progress_bar.increment();
@@ -35,7 +35,8 @@ import cliProgress from "cli-progress";
 
     console.log(`Found ${processed_locks.length} locks`);
 
-    const ten_bil = 1n.pow(9);
+    let multiplier_total = 0;
+    const ten_bil = 1n ** 9n;
     for (let i = 0; i < processed_locks.length; i++) {
         const sym = processed_locks[i].symbol.toLowerCase();
 
@@ -44,17 +45,15 @@ import cliProgress from "cli-progress";
             Number(quantity_total[sym] / ten_bil);
 
         const multiplier_time =
-            Math.pow(processed_locks[i].lock_time, TIME_EXPONENT) /
-            Number(time_exp_total[sym]);
+            Number(BigInt(processed_locks[i].lock_time) ** BigInt(TIME_EXPONENT) / ten_bil) /
+            Number(time_exp_total[sym] / ten_bil);
 
         processed_locks[i].multiplier = Number(multiplier_quantity) * multiplier_time;
+        multiplier_total += processed_locks[i].multiplier;
+
+        // console.log(`${multiplier_quantity} * ${multiplier_time} = ${processed_locks[i].multiplier}`);
     }
 
-    console.log(processed_locks);
-    let multiplier_total = 0;
-    processed_locks.forEach(l => {
-        multiplier_total += l.multiplier;
-    });
     console.log(`Total multipliers : ${multiplier_total}`);
 
 })();
