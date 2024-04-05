@@ -36,9 +36,9 @@ import { FixedPoint } from '@hastom/fixed-point'
 
         progress_bar.increment();
 
-        if (processed_locks.length === 10){
-            break;
-        }
+        // if (processed_locks.length === 10){
+        //     break;
+        // }
     }
     progress_bar.stop();
 
