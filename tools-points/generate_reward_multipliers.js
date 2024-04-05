@@ -7,7 +7,7 @@ import { FixedPoint } from '@hastom/fixed-point'
 
 (async () => {
     const END_TIME = 1711491600;
-    const TIME_EXPONENT = 2;
+    const TIME_EXPONENT = 1.1;
     const progress_bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
     progress_bar.start(5286, 0); // 5286 = lines in original csv
 
@@ -27,7 +27,7 @@ import { FixedPoint } from '@hastom/fixed-point'
         const tx_receipt = await provider.getTransactionReceipt(tx_hash);
         const block = await provider.getBlock(tx_receipt.blockNumber);
         const lock_time = END_TIME - block.timestamp;
-        const time_exp = Math.pow(lock_time, TIME_EXPONENT);
+        const time_exp = Math.floor(Math.pow(lock_time, TIME_EXPONENT));
         processed_locks.push({account, token_contract, symbol, quantity, lock_time, time_exp});
 
         const sym = symbol.toLowerCase();
