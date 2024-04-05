@@ -75,10 +75,4 @@ const prefix = process.env.POINTS_PREFIX;
         console.log(`Wrote ${outfile}`);
     });
 
-    while (true) {
-        const statuses = await blast_api.getAllBatchStatuses();
-        console.log(statuses);
-        await sleep(2000);
-    }
-
 })();
