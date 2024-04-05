@@ -6,6 +6,8 @@ import {FixedPoint} from "@hastom/fixed-point";
 import {sleep} from "../lib/sleep.js";
 
 const prefix = process.env.POINTS_PREFIX;
+const type = 'LIQUIDITY';
+const BATCH_SIZE = 20;
 
 (async () => {
     const filename = 'reward-distribution.csv';
@@ -15,12 +17,13 @@ const prefix = process.env.POINTS_PREFIX;
         process.env.POINTS_PRIVATE_KEY,
         process.env.POINTS_CONTRACT,
         process.env.POINTS_OPERATOR,
-        'POINTS',
+        'POINTS', // dont think we need this in the constructor, we can supply in each function that needs it
         false
     );
     await blast_api.obtainBearerToken();
     const balance = await blast_api.getContractPointsBalance();
-    let available = `${parseFloat(balance.LIQUIDITY.available) * 100000}`;
+    // TODO : Remove 100000 multiplier for mainnet
+    let available = `${parseFloat(balance[type].available) * 100000}`;
     const precision = available.length - available.indexOf('.') - 1;
     available += '0'.repeat(12 - precision);
     const big = BigInt(available.replace('.', ''));
@@ -47,13 +50,15 @@ const prefix = process.env.POINTS_PREFIX;
         }
         // console.log(batch);
 
-        if (batch.length === 20){
+        if (batch.length === BATCH_SIZE){
             await blast_api.submitBatch(
                 batch.map(t => {
                     return new BlastPointsTransfer(t.account, t.points)
-                })
+                }),
+                type
             );
             batch = [];
+            // TODO : Remove break to send multiple batches
             break;
         }
     }
