@@ -72,7 +72,8 @@ const BATCH_SIZE = parseInt(process.env.REWARDS_BATCH_SIZE) || 1000;
                 // duplicate batch, continue below to increment bar
             }
             else {
-                console.error(`Error submitting batch ${e.message}`);
+                console.error(`Error submitting batch ${e.message}, rolling back`);
+                await blast_api.deleteBatches();
                 progress_bar.stop();
                 throw e;
             }
