@@ -8,19 +8,21 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 (async () => {
-    if (process.env.REWARDS_TYPE !== 'POINTS' && process.env.REWARDS_ENV !== 'GOLD') {
+    if (process.env.REWARDS_TYPE !== 'POINTS' && process.env.REWARDS_TYPE !== 'GOLD') {
       throw new Error('REWARDS_TYPE must be set to POINTS or GOLD')
     }
     const env = process.env.REWARDS_TYPE;
 
     const END_TIME = 1711491600;
     const TIME_EXPONENT = 1.1;
+    const LOCK_INTENT_EXPONENT = 1.15
     const progress_bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
     progress_bar.start(5286, 0); // 5286 = lines in original csv
 
     const processed_locks = [];
     let quantity_total = {eth: 0n, usdb: 0n, weth: 0n};
     let time_exp_total = {eth: 0n, usdb: 0n, weth: 0n};
+    let lock_intent_total = {eth: 0n, usdb: 0n, weth: 0n};
 
     /*
     Read data from original locks.csv file, calculate time exponential and calculate totals
@@ -29,16 +31,18 @@ dotenv.config();
         .createReadStream(LOCKS_FILE)
         .pipe(parse({}));
     for await (const record of parser) {
-        const [account, token_contract, symbol, quantity, , tx_hash] = record;
+        const [account, token_contract, symbol, quantity, lock_duration, tx_hash] = record;
         const tx_receipt = await provider.getTransactionReceipt(tx_hash);
         const block = await provider.getBlock(tx_receipt.blockNumber);
         const lock_time = END_TIME - block.timestamp;
         const time_exp = Math.floor(Math.pow(lock_time, TIME_EXPONENT));
-        processed_locks.push({account, token_contract, symbol, quantity, lock_time, time_exp});
+        const lock_dur_exp = Math.floor(Math.pow(lock_duration, LOCK_INTENT_EXPONENT));
+        processed_locks.push({account, token_contract, symbol, quantity, lock_time, time_exp, lock_dur_exp});
 
         const sym = symbol.toLowerCase();
         quantity_total[sym] += BigInt(quantity);
         time_exp_total[sym] += BigInt(time_exp);
+        lock_intent_total[sym] += BigInt(lock_dur_exp);
 
         progress_bar.increment();
 
@@ -71,9 +75,21 @@ dotenv.config();
         const time_exp_fp = new FixedPoint(BigInt(processed_locks[i].time_exp), 18);
         const time_total_fp = new FixedPoint(time_exp_total[sym], 18);
         let multiplier_time = time_exp_fp;
-        multiplier_time.div(time_total_fp).add(new FixedPoint(1n * (10n ** 18n), 18));
+        multiplier_time.div(time_total_fp)
 
-        processed_locks[i].time_adjusted_qty = quantity_fp.mul(multiplier_time);
+        const lock_intent_fp = new FixedPoint(BigInt(processed_locks[i].lock_dur_exp), 18);
+        const lock_intent_total_fp = new FixedPoint(lock_intent_total[sym], 18);
+        let multiplier_intent = lock_intent_fp;
+        multiplier_intent.div(lock_intent_total_fp)
+
+        let multiplier = new FixedPoint(1n * (10n ** 18n), 18);
+        if (env === 'GOLD') {
+          multiplier = multiplier.add(multiplier_time).add(multiplier_intent);
+        } else {
+          multiplier = multiplier.add(multiplier_time);
+        }
+
+        processed_locks[i].time_adjusted_qty = quantity_fp.mul(multiplier);
         time_adjusted_qty_total[sym].add(processed_locks[i].time_adjusted_qty);
     }
 
@@ -119,16 +135,6 @@ dotenv.config();
         }
     });
     
-    const raw_csv_rows = Object.values(account_totals).map(t => 
-      `${t.account},${t.symbol},${t.quantity},${t.lock_time}`
-    );
-
-    const raw_csv_file = env+'-raw-data.csv';
-    fs.writeFile(raw_csv_file, raw_csv_rows.join(`\n`), () => {
-        console.log(`Wrote ${raw_csv_file}`);
-    });
-
-
     const csv_rows = Object.values(account_totals).map(t =>
         `${t.account},${t.symbol},${t.multiplier.toDecimalString()}`
     );
