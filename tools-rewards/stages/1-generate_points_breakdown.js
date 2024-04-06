@@ -21,7 +21,7 @@ const prefix = process.env.REWARDS_PREFIX;
     const balance = await blast_api.getContractPointsBalance();
     // use 1/10 of available points for testnet
     let multiplier = process.env.REWARDS_ENV === 'testnet' ? 100000 : 1000000;
-    let available = `${14193.23366764544 * multiplier}`;
+    let available = `${parseFloat(balance[type].available) * multiplier}`;
 
     const precision = available.length - available.indexOf('.') - 1;
     available += '0'.repeat(12 - precision);
