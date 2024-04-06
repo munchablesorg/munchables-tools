@@ -7,7 +7,7 @@ require("@nomicfoundation/hardhat-verify");
 // require("@nomiclabs/hardhat-etherscan");
 // require("hardhat-contract-sizer");
 require("dotenv").config();
-console.log(process.env.NODE_URL_URL);
+console.log(process.env.NODE_URL);
 console.log(process.env.PRIVATE_KEY);
 module.exports = {
   sourcify: {
