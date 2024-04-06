@@ -22,7 +22,8 @@ dotenv.config();
     const processed_locks = [];
     let quantity_total = {eth: 0n, usdb: 0n, weth: 0n};
     let time_exp_total = {eth: 0n, usdb: 0n, weth: 0n};
-    let lock_intent_total = {eth: 0n, usdb: 0n, weth: 0n};
+    let lock_intent_exp_total = {eth: 0n, usdb: 0n, weth: 0n};
+    const thirty_days = 60 * 60 * 24 * 30;
 
     /*
     Read data from original locks.csv file, calculate time exponential and calculate totals
@@ -31,16 +32,18 @@ dotenv.config();
         .createReadStream(LOCKS_FILE)
         .pipe(parse({}));
     for await (const record of parser) {
-        const [account, token_contract, symbol, quantity, lock_duration, tx_hash, block_timestamp] = record;
+        let [account, token_contract, symbol, quantity, lock_duration, tx_hash, block_timestamp] = record;
         const lock_time = END_TIME - parseInt(block_timestamp);
+        lock_duration = parseInt(lock_duration);
         const time_exp = Math.floor(Math.pow(lock_time, TIME_EXPONENT));
+        // console.log(lock_duration - thirty_days);
         const lock_dur_exp = Math.floor(Math.pow(lock_duration, LOCK_INTENT_EXPONENT));
         processed_locks.push({account, token_contract, symbol, quantity, lock_time, time_exp, lock_dur_exp});
 
         const sym = symbol.toLowerCase();
         quantity_total[sym] += BigInt(quantity);
         time_exp_total[sym] += BigInt(time_exp);
-        lock_intent_total[sym] += BigInt(lock_dur_exp);
+        lock_intent_exp_total[sym] += BigInt(lock_dur_exp);
 
         progress_bar.increment();
 
@@ -76,7 +79,7 @@ dotenv.config();
         multiplier_time.div(time_total_fp)
 
         const lock_intent_fp = new FixedPoint(BigInt(processed_locks[i].lock_dur_exp), 18);
-        const lock_intent_total_fp = new FixedPoint(lock_intent_total[sym], 18);
+        const lock_intent_total_fp = new FixedPoint(lock_intent_exp_total[sym], 18);
         let multiplier_intent = lock_intent_fp;
         multiplier_intent.div(lock_intent_total_fp)
 
