@@ -31,6 +31,9 @@ const prefix = process.env.REWARDS_PREFIX;
     let weth_proportion
     let eth_proportion
     if (process.env.REWARDS_TYPE === 'POINTS') {
+      if (process.env.REWARDS_ENV === 'mainnet' && parseFloat(balance[type].finalizedSentCumulative) > 0){
+          throw new Error(`Cannot proceed if there are previously finalised batches`);
+      }
       const earned_cum = parseFloat(balance[type].earnedCumulative)
       usdb_proportion = FixedPoint.fromDecimal(parseFloat(balance[type].byAsset['USDB'].earnedCumulative) / earned_cum, 4)
       weth_proportion = FixedPoint.fromDecimal(parseFloat(balance[type].byAsset['WETH'].earnedCumulative) / earned_cum, 4)
