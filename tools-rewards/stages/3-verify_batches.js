@@ -16,6 +16,7 @@ dotenv.config();
         process.env.REWARDS_OPERATOR,
         process.env.REWARDS_TYPE
     );
+    console.log('Obtaining bearer token');
     await blast_api.obtainBearerToken();
 
     const parserDistribution = fs
