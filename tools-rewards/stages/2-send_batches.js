@@ -41,9 +41,12 @@ const BATCH_SIZE = process.env.REWARDS_BATCH_SIZE || 1000;
     }
 
     let lower_bound = points_total * 0.99;
-    let upper_bound = points_total * 1.01;
-    if (available_num < lower_bound || available_num > upper_bound) {
-      throw new Error(`Total points to distribute (${points_total}) is not equal to available points (${available_num})`);
+    let upper_bound = points_total;
+    if (available_num < lower_bound) {
+        throw new Error(`Total points to distribute (${points_total}) is not equal to available points (${available_num})`);
+    }
+    else if (upper_bound > available_num) {
+        throw new Error(`Total points to distribute (${points_total}) is greater than available points (${available_num})`);
     }
     
     let batch_ids = []
