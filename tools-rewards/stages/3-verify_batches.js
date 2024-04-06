@@ -5,15 +5,12 @@ import cliProgress from "cli-progress";
 import dotenv from 'dotenv';
 dotenv.config();
 
-const prefix = process.env.REWARDS_PREFIX;
-const BATCH_SIZE = process.env.REWARDS_BATCH_SIZE || 1000;
-
 (async () => {
     const batch_ids_file = process.env.REWARDS_TYPE+'-batch-ids.csv';
     const distribution_file = process.env.REWARDS_TYPE+'-distribution.csv';
 
     const blast_api = new BlastPointsAPI(
-        prefix,
+        process.env.REWARDS_PREFIX,
         process.env.REWARDS_PRIVATE_KEY,
         process.env.REWARDS_CONTRACT,
         process.env.REWARDS_OPERATOR,
