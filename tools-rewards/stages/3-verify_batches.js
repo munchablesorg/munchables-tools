@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const prefix = process.env.REWARDS_PREFIX;
-const BATCH_SIZE = process.env.REWARDS_BATCH_SIZE || 50;
+const BATCH_SIZE = process.env.REWARDS_BATCH_SIZE || 1000;
 
 (async () => {
     const batch_ids_file = process.env.REWARDS_TYPE+'-batch-ids.csv';

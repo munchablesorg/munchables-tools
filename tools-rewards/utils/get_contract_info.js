@@ -15,4 +15,7 @@ import {BlastPointsAPI} from "../../lib/bindings/blast_points.js";
 
     const points = await blast_api.getContractPointsBalance();
     console.log(points)
+    if (process.env.REWARDS_TYPE === 'POINTS') {
+      console.log(points['LIQUIDITY'].byAsset)
+    }
 })();

@@ -104,16 +104,23 @@ dotenv.config();
             account_totals[m.account] = {
                 account: m.account,
                 symbol: m.symbol,
-                multiplier: m.multiplier
+                multiplier: m.multiplier,
+                quantity: m.quantity,
+                lock_time: m.lock_time,
             };
         }
         else {
+            if (account_totals[m.account].symbol !== m.symbol){
+              throw new Error(`Account ${m.account} has multiple symbols: ${account_totals[m.account].symbol} != ${m.symbol}`)
+            }
             account_totals[m.account].multiplier.add(m.multiplier);
+            account_totals[m.account].quantity += m.quantity;
+            account_totals[m.account].lock_time += m.lock_time;
         }
     });
     
-    const raw_csv_rows = Object.values(processed_locks).map(t => 
-      `${t.account},${t.token_contract},${t.symbol},${t.quantity},${t.lock_time},${t.time_exp},${t.time_adjusted_qty.toDecimalString()},${t.multiplier.toDecimalString()}`
+    const raw_csv_rows = Object.values(account_totals).map(t => 
+      `${t.account},${t.symbol},${t.quantity},${t.lock_time}`
     );
 
     const raw_csv_file = env+'-raw-data.csv';
