@@ -30,19 +30,29 @@ const BATCH_SIZE = process.env.REWARDS_BATCH_SIZE || 1000;
         const [account, points] = record;
         localAccountMapping[account.toLowerCase()] = parseFloat(points);
         length++
-    }    
+    }
+
+    let total_batches = 0, pending_batches = [], batches_from_csv = [];
 
     const progress_bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
-    progress_bar.start(Math.ceil(length / BATCH_SIZE)-1, 0);
+
+    console.log(`Reading CSV`);
     const parserBatchIds = fs
         .createReadStream(batch_ids_file)
         .pipe(parse({}));
-    const externalAccountMapping = {}
     for await (const record of parserBatchIds) {
+        batches_from_csv.push(record);
+    }
+
+    progress_bar.start(batches_from_csv.length, 0);
+    const externalAccountMapping = {}
+    for (let i = 0; i < batches_from_csv.length; i++) {
+        const record = batches_from_csv[i];
+        total_batches++;
         const [id] = record;
         const returnData = await blast_api.getBatchStatus(id);
         if (returnData.status !== 'FINALIZED') {
-          console.log(`Batch ${id} is not finalized`);
+            pending_batches.push(id);
         }
         for (let i of returnData.transfers) {
             externalAccountMapping[i.toAddress.toLowerCase()] = parseFloat(i.points);
@@ -70,6 +80,12 @@ const BATCH_SIZE = process.env.REWARDS_BATCH_SIZE || 1000;
         }
     }
     console.log('All accounts and points match');
+    if (pending_batches.length){
+        console.log(`${pending_batches.length}/${total_batches} batches still pending`);
+    }
+    else {
+        console.log('All batches have been finalised');
+    }
 })();
 
 
