@@ -111,6 +111,16 @@ dotenv.config();
             account_totals[m.account].multiplier.add(m.multiplier);
         }
     });
+    
+    const raw_csv_rows = Object.values(processed_locks).map(t => 
+      `${t.account},${t.token_contract},${t.symbol},${t.quantity},${t.lock_time},${t.time_exp},${t.time_adjusted_qty.toDecimalString()},${t.multiplier.toDecimalString()}`
+    );
+
+    const raw_csv_file = env+'-raw-data.csv';
+    fs.writeFile(raw_csv_file, raw_csv_rows.join(`\n`), () => {
+        console.log(`Wrote ${raw_csv_file}`);
+    });
+
 
     const csv_rows = Object.values(account_totals).map(t =>
         `${t.account},${t.symbol},${t.multiplier.toDecimalString()}`
@@ -119,7 +129,6 @@ dotenv.config();
     const csv_file = env+'-multiplier-distribution.csv';
     fs.writeFile(csv_file, csv_rows.join(`\n`), () => {
         console.log(`Wrote ${csv_file}`);
-        process.exit(0);
     });
 
 })();

@@ -16,8 +16,7 @@ const BATCH_SIZE = process.env.REWARDS_BATCH_SIZE || 50;
         process.env.REWARDS_PRIVATE_KEY,
         process.env.REWARDS_CONTRACT,
         process.env.REWARDS_OPERATOR,
-        process.env.REWARDS_TYPE,
-        false
+        process.env.REWARDS_TYPE
     );
     await blast_api.obtainBearerToken();
     const balance = await blast_api.getContractPointsBalance();

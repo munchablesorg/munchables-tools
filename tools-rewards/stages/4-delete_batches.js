@@ -14,8 +14,7 @@ const prefix = process.env.REWARDS_PREFIX;
         process.env.REWARDS_PRIVATE_KEY,
         process.env.REWARDS_CONTRACT,
         process.env.REWARDS_OPERATOR,
-        process.env.REWARDS_TYPE,
-        false
+        process.env.REWARDS_TYPE
     );
     await blast_api.obtainBearerToken();
     const batchIds = []

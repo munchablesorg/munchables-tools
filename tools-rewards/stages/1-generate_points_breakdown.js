@@ -15,12 +15,11 @@ const prefix = process.env.REWARDS_PREFIX;
         process.env.REWARDS_PRIVATE_KEY,
         process.env.REWARDS_CONTRACT,
         process.env.REWARDS_OPERATOR,
-        process.env.REWARDS_TYPE,
-        false
+        process.env.REWARDS_TYPE
     );
     await blast_api.obtainBearerToken();
     const balance = await blast_api.getContractPointsBalance();
-    let multiplier = process.env.REWARDS_ENV === 'testnet' ? 100000 : 1;
+    let multiplier = process.env.REWARDS_ENV === 'testnet' ? 100000 : 1000000;
     let available = `${parseFloat(balance[type].available) * multiplier}`;
     const precision = available.length - available.indexOf('.') - 1;
     available += '0'.repeat(12 - precision);
@@ -28,6 +27,7 @@ const prefix = process.env.REWARDS_PREFIX;
 
     const blast_points = new FixedPoint(big, 18);
 
+    let total = 0
     let all_transfers = [];
     const parser = fs
         .createReadStream(filename)
@@ -41,14 +41,20 @@ const prefix = process.env.REWARDS_PREFIX;
         const multiplier = new FixedPoint(_multiplier_big, 18);
         multiplier.mul(blast_points);
         multiplier.div(new FixedPoint(3n, 0));
-
-        if (parseFloat(multiplier.toDecimalString()) >= MINIMUM_LIQUIDITY_TRANSFER_SIZE){
+        total += parseFloat(multiplier.toDecimalString());
+        if (parseFloat(multiplier.toDecimalString()) >= MINIMUM_LIQUIDITY_TRANSFER_SIZE) {
             all_transfers.push({account, points: multiplier.toDecimalString()});
         }
         // console.log(batch);
     }
+    
+    const delta = parseFloat(balance[type].available) * multiplier / 1000000 - total
+    if (delta > 0.00001) { 
+        throw new Error(`Problem with points calculation: ${total} != ${parseFloat(balance[type].available)}`);
+    }
 
     const all_transfers_csv = all_transfers.map(b => `${b.account},${b.points}`);
+    console.log("TOTAL POINTS: " + total)
     const outfile = process.env.REWARDS_TYPE+'-distribution.csv';
     fs.writeFile(outfile, all_transfers_csv.join('\n'), () => {
         console.log(`Wrote ${outfile}`);
