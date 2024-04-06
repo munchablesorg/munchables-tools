@@ -42,6 +42,9 @@ const BATCH_SIZE = process.env.REWARDS_BATCH_SIZE || 50;
     for await (const record of parserBatchIds) {
         const [id] = record;
         const returnData = await blast_api.getBatchStatus(id);
+        if (returnData.status !== 'FINALIZED') {
+          console.log(`Batch ${id} is not finalized`);
+        }
         for (let i of returnData.transfers) {
             externalAccountMapping[i.toAddress.toLowerCase()] = parseFloat(i.points);
         }
