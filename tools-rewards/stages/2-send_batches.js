@@ -2,10 +2,11 @@ import {BlastPointsAPI, BlastPointsTransfer } from "../../lib/bindings/blast_poi
 import fs from "node:fs";
 import {parse} from "csv-parse";
 import dotenv from 'dotenv';
+import cliProgress from "cli-progress";
 dotenv.config();
 
 const prefix = process.env.REWARDS_PREFIX;
-const BATCH_SIZE = process.env.REWARDS_BATCH_SIZE || 1000;
+const BATCH_SIZE = parseInt(process.env.REWARDS_BATCH_SIZE) || 1000;
 
 (async () => {
     const type = process.env.REWARDS_TYPE === 'POINTS' ? 'LIQUIDITY' : 'DEVELOPER';
@@ -39,6 +40,11 @@ const BATCH_SIZE = process.env.REWARDS_BATCH_SIZE || 1000;
             batch = [];
         }
     }
+    if (batch.length){
+        batch_calls.push(batch.map(t => {
+            return new BlastPointsTransfer(t.account, t.points)
+        }))
+    }
 
     let lower_bound = points_total * 0.99;
     let upper_bound = points_total;
@@ -50,12 +56,31 @@ const BATCH_SIZE = process.env.REWARDS_BATCH_SIZE || 1000;
     }
     
     let batch_ids = []
+    const progress_bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+    progress_bar.start(batch_calls.length, 0);
     for (let i = 0; i < batch_calls.length; i++) {
-        const batch_data = batch_calls[i];  
-        const id = await blast_api.submitBatch(batch_data);
-        console.log(`Submitted batch ${id}`)
-        batch_ids.push(id);
+        const batch_data = batch_calls[i];
+        try {
+            const id = await blast_api.submitBatch(batch_data);
+            batch_ids.push(id);
+        }
+        catch (e){
+            const code_re = new RegExp(/status code ([0-9]{3})/, 'i');
+            const m = e.message.match(code_re);
+            const status_code = m[1];
+            if (m && status_code && status_code === '409'){
+                // duplicate batch, continue below to increment bar
+            }
+            else {
+                console.error(`Error submitting batch ${e.message}`);
+                progress_bar.stop();
+                throw e;
+            }
+        }
+
+        progress_bar.increment();
     }
+    progress_bar.stop();
 
     const outfile = process.env.REWARDS_TYPE+'-batch-ids.csv';
     fs.writeFile(outfile, batch_ids.join('\n'), () => {
