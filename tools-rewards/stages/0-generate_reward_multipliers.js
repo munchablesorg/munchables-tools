@@ -31,10 +31,8 @@ dotenv.config();
         .createReadStream(LOCKS_FILE)
         .pipe(parse({}));
     for await (const record of parser) {
-        const [account, token_contract, symbol, quantity, lock_duration, tx_hash] = record;
-        const tx_receipt = await provider.getTransactionReceipt(tx_hash);
-        const block = await provider.getBlock(tx_receipt.blockNumber);
-        const lock_time = END_TIME - block.timestamp;
+        const [account, token_contract, symbol, quantity, lock_duration, block_timestamp, tx_hash] = record;
+        const lock_time = END_TIME - parseInt(block_timestamp);
         const time_exp = Math.floor(Math.pow(lock_time, TIME_EXPONENT));
         const lock_dur_exp = Math.floor(Math.pow(lock_duration, LOCK_INTENT_EXPONENT));
         processed_locks.push({account, token_contract, symbol, quantity, lock_time, time_exp, lock_dur_exp});
