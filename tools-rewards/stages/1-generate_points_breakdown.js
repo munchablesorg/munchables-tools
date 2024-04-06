@@ -21,7 +21,7 @@ const prefix = process.env.REWARDS_PREFIX;
     const balance = await blast_api.getContractPointsBalance();
     // use 1/10 of available points for testnet
     let multiplier = process.env.REWARDS_ENV === 'testnet' ? 100000 : 1000000;
-    let available = `${parseFloat(balance[type].available) * multiplier}`;
+    let available = `${14193.23366764544 * multiplier}`;
 
     const precision = available.length - available.indexOf('.') - 1;
     available += '0'.repeat(12 - precision);
@@ -80,7 +80,7 @@ const prefix = process.env.REWARDS_PREFIX;
     }
 
     const all_transfers_csv = all_transfers.map(b => `${b.account},${b.points}`);
-    console.log("TOTAL POINTS: " + total)
+    console.log("TOTAL " + process.env.REWARDS_TYPE + ": " + total)
     const outfile = process.env.REWARDS_TYPE+'-distribution.csv';
     fs.writeFile(outfile, all_transfers_csv.join('\n'), () => {
         console.log(`Wrote ${outfile}`);
