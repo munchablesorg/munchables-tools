@@ -31,7 +31,7 @@ dotenv.config();
         .createReadStream(LOCKS_FILE)
         .pipe(parse({}));
     for await (const record of parser) {
-        const [account, token_contract, symbol, quantity, lock_duration, block_timestamp, tx_hash] = record;
+        const [account, token_contract, symbol, quantity, lock_duration, tx_hash, block_timestamp] = record;
         const lock_time = END_TIME - parseInt(block_timestamp);
         const time_exp = Math.floor(Math.pow(lock_time, TIME_EXPONENT));
         const lock_dur_exp = Math.floor(Math.pow(lock_duration, LOCK_INTENT_EXPONENT));
