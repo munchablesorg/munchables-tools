@@ -41,10 +41,7 @@ const prefix = process.env.REWARDS_PREFIX;
       console.log(`WETH: ${weth_proportion.toDecimalString()}`)
       console.log(`ETH: ${eth_proportion.toDecimalString()}`)
     } else {
-      // Equal for gold
-      usdb_proportion = new FixedPoint(0.3333, 4)
-      weth_proportion = new FixedPoint(0.3333, 4)
-      eth_proportion = new FixedPoint(0.3333, 4)
+      throw new Error("DECIDE HOW WE WANT TO DO THIS... I'M THINKING WE JUST USE THE SAME PROPORTIONS AS POINTS")
     }
 
     const blast_points = new FixedPoint(big, 18);
