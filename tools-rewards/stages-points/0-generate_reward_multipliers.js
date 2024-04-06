@@ -1,11 +1,18 @@
-import {LOCKS_FILE} from "../lib/env.js";
+import {LOCKS_FILE} from "../../lib/env.js";
 import fs from "fs";
 import {parse} from "csv-parse";
-import {provider} from "../lib/contracts.js";
+import {provider} from "../../lib/contracts.js";
 import cliProgress from "cli-progress";
 import { FixedPoint } from '@hastom/fixed-point'
+import dotenv from 'dotenv';
+dotenv.config();
 
 (async () => {
+    if (process.env.REWARDS_TYPE !== 'POINTS' && process.env.REWARDS_ENV !== 'GOLD') {
+      throw new Error('REWARDS_TYPE must be set to POINTS or GOLD')
+    }
+    const env = process.env.REWARDS_TYPE;
+
     const END_TIME = 1711491600;
     const TIME_EXPONENT = 1.1;
     const progress_bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
@@ -14,7 +21,6 @@ import { FixedPoint } from '@hastom/fixed-point'
     const processed_locks = [];
     let quantity_total = {eth: 0n, usdb: 0n, weth: 0n};
     let time_exp_total = {eth: 0n, usdb: 0n, weth: 0n};
-    const ten_bil = 10n ** 9n;
 
     /*
     Read data from original locks.csv file, calculate time exponential and calculate totals
@@ -110,7 +116,7 @@ import { FixedPoint } from '@hastom/fixed-point'
         `${t.account},${t.symbol},${t.multiplier.toDecimalString()}`
     );
 
-    const csv_file = 'reward-distribution.csv';
+    const csv_file = env+'-multiplier-distribution.csv';
     fs.writeFile(csv_file, csv_rows.join(`\n`), () => {
         console.log(`Wrote ${csv_file}`);
         process.exit(0);
