@@ -36,10 +36,10 @@ dotenv.config();
     if (process.env.REWARDS_ENV === 'mainnet' && parseFloat(balance[type].finalizedSentCumulative) > 0){
         throw new Error(`Cannot proceed if there are previously finalised batches`);
     }
-    const earned_cum = parseFloat(balance[type].earnedCumulative)
-    usdb_proportion = FixedPoint.fromDecimal(parseFloat(balance[type].byAsset['USDB'].earnedCumulative) / earned_cum, 4)
-    weth_proportion = FixedPoint.fromDecimal(parseFloat(balance[type].byAsset['WETH'].earnedCumulative) / earned_cum, 4)
-    eth_proportion = FixedPoint.fromDecimal(parseFloat(balance[type].byAsset['ETH'].earnedCumulative) / earned_cum, 4)
+    const earned_cum = parseFloat(balance['LIQUIDITY'].earnedCumulative)
+    usdb_proportion = FixedPoint.fromDecimal(parseFloat(balance['LIQUIDITY'].byAsset['USDB'].earnedCumulative) / earned_cum, 4)
+    weth_proportion = FixedPoint.fromDecimal(parseFloat(balance['LIQUIDITY'].byAsset['WETH'].earnedCumulative) / earned_cum, 4)
+    eth_proportion = FixedPoint.fromDecimal(parseFloat(balance['LIQUIDITY'].byAsset['ETH'].earnedCumulative) / earned_cum, 4)
 
     console.log('Proportions')
     console.log(`USDB: ${usdb_proportion.toDecimalString()}`)
@@ -76,14 +76,13 @@ dotenv.config();
         }
         // console.log(batch);
     }
-    
     const delta = parseFloat(balance[type].available) * multiplier / 1000000 - total
     if (delta > 0.00001) { 
         throw new Error(`Problem with points calculation: ${total} != ${parseFloat(balance[type].available)}`);
     }
 
     const all_transfers_csv = all_transfers.map(b => `${b.account},${b.points}`);
-    console.log("TOTAL POINTS: " + total)
+    console.log("TOTAL " + process.env.REWARDS_TYPE + ": " + total)
     const outfile = process.env.REWARDS_TYPE+'-distribution.csv';
     fs.writeFile(outfile, all_transfers_csv.join('\n'), () => {
         console.log(`Wrote ${outfile}`);

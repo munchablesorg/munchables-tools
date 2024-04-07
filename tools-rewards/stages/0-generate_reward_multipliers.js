@@ -7,6 +7,9 @@ import { FixedPoint } from '@hastom/fixed-point'
 import dotenv from 'dotenv';
 dotenv.config();
 
+const JUICE_GOLD_ORIGINAL_ADDRESS = '0x01f7df622dde3b7d234aadbe282dda24cead9d21'.toLowerCase();
+const JUICE_GOLD_REPLACEMENT_ADDRESS = '0x34C9F9353566Fd33682DBd77054d2287BFf7cA7D';
+
 (async () => {
     const env = process.env.REWARDS_TYPE;
     if (!['POINTS', 'GOLD', 'YIELD'].includes(env)) {
@@ -91,8 +94,18 @@ dotenv.config();
         }
 
         processed_locks[i].time_adjusted_qty = quantity_fp.mul(multiplier);
+        // Test with random address
+        /*if (processed_locks[i].account === "0x69f2bA0b17C09Be07E16f85963a7a18ef05b5770") {
+          console.log(`ADDRESS: ${processed_locks[i].account}, SYMBOL: ${sym}, QUANTITY: ${quantity_fp}, TIME: ${processed_locks[i].time_exp}, INTENT: ${(processed_locks[i].lock_dur_exp)}, MULTIPLIER TIME: ${multiplier_time.toDecimalString()}, TIME TOTAL: ${time_exp_total[sym]}, LOCK INTENT TOTAL: ${lock_intent_exp_total[sym]}, MULTIPLIER INTENT: ${multiplier_intent.toDecimalString()}, TIME ADJUSTED QTY: ${processed_locks[i].time_adjusted_qty}`)
+        }*/
         time_adjusted_qty_total[sym].add(processed_locks[i].time_adjusted_qty);
     }
+    console.log(`TIME-QUANTITY ADJUSTED TOTAL [ETH]:`)
+    console.log(time_adjusted_qty_total['eth'])
+    console.log(`TIME-QUANTITY ADJUSTED TOTAL [WETH]:`)
+    console.log(time_adjusted_qty_total['weth'])
+    console.log(`TIME-QUANTITY ADJUSTED TOTAL [USDB]:`)
+    console.log(time_adjusted_qty_total['usdb'])
 
 
     /*
@@ -103,7 +116,10 @@ dotenv.config();
 
         const multiplier = processed_locks[i].time_adjusted_qty;
         multiplier.div(time_adjusted_qty_total[sym]);
-
+        // Test with random address
+        /*if (processed_locks[i].account === "0x69f2bA0b17C09Be07E16f85963a7a18ef05b5770") {
+          console.log(`ADDRESS: ${processed_locks[i].account}, MULTIPLIER: ${multiplier}`)
+        }*/
         processed_locks[i].multiplier = multiplier;
         multiplier_total[sym].add(multiplier);
     }
@@ -117,6 +133,9 @@ dotenv.config();
      */
     const account_totals = {};
     processed_locks.forEach(m => {
+        if (m.account.toLowerCase() === JUICE_GOLD_ORIGINAL_ADDRESS && env === "GOLD") {
+          m.account = JUICE_GOLD_REPLACEMENT_ADDRESS
+        }
         if (!account_totals[m.account]){
             account_totals[m.account] = {
                 account: m.account,
