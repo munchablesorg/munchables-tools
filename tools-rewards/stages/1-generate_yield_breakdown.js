@@ -44,9 +44,7 @@ dotenv.config();
         } else {
           throw new Error(`Unknown symbol: ${symbol}`)
         }
-        if (parseFloat(multiplier.toDecimalString()) >= MINIMUM_LIQUIDITY_TRANSFER_SIZE) {
-            all_transfers.push({account, token_type, quantity: multiplier.getBase().toString()});
-        }
+        all_transfers.push({account, token_type, quantity: multiplier.getBase().toString()});
     }
 
     const all_transfers_csv = all_transfers.map(b => `${b.account},${b.quantity},${b.token_type}`);
