@@ -8,10 +8,10 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 (async () => {
-    if (process.env.REWARDS_TYPE !== 'POINTS' && process.env.REWARDS_TYPE !== 'GOLD') {
-      throw new Error('REWARDS_TYPE must be set to POINTS or GOLD')
-    }
     const env = process.env.REWARDS_TYPE;
+    if (!['POINTS', 'GOLD', 'YIELD'].includes(env)) {
+      throw new Error('REWARDS_TYPE must be set to POINTS, GOLD or YIELD')
+    }
 
     const END_TIME = 1711491600;
     const TIME_EXPONENT = 1.1;
@@ -86,7 +86,7 @@ dotenv.config();
         let multiplier = new FixedPoint(1n * (10n ** 18n), 18);
         if (env === 'GOLD') {
           multiplier = multiplier.add(multiplier_time).add(multiplier_intent);
-        } else {
+        } {
           multiplier = multiplier.add(multiplier_time);
         }
 

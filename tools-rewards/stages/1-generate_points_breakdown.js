@@ -5,13 +5,15 @@ import {FixedPoint} from "@hastom/fixed-point";
 import dotenv from 'dotenv';
 dotenv.config();
 
-const prefix = process.env.REWARDS_PREFIX;
-
 (async () => {
-    const filename = process.env.REWARDS_TYPE+'-multiplier-distribution.csv';
-    const type = process.env.REWARDS_TYPE === 'POINTS' ? 'LIQUIDITY' : 'DEVELOPER';
+    const env = process.env.REWARDS_TYPE;
+    if (!['POINTS', 'GOLD'].includes(env)) {
+        throw new Error('REWARDS_TYPE must be set to POINTS, GOLD or YIELD')
+    }
+    const filename = env+'-multiplier-distribution.csv';
+    const type = env === 'POINTS' ? 'LIQUIDITY' : 'DEVELOPER';
     const blast_api = new BlastPointsAPI(
-        prefix,
+        process.env.REWARDS_PREFIX,
         process.env.REWARDS_PRIVATE_KEY,
         process.env.REWARDS_CONTRACT,
         process.env.REWARDS_OPERATOR,
