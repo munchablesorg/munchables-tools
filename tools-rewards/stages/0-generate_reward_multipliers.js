@@ -7,8 +7,9 @@ import { FixedPoint } from '@hastom/fixed-point'
 import dotenv from 'dotenv';
 dotenv.config();
 
-const JUICE_GOLD_ORIGINAL_ADDRESS = '0x01f7df622dde3b7d234aadbe282dda24cead9d21'.toLowerCase();
+const JUICE_ORIGINAL_ADDRESS = '0x01f7df622dde3b7d234aadbe282dda24cead9d21'.toLowerCase();
 const JUICE_GOLD_REPLACEMENT_ADDRESS = '0x34C9F9353566Fd33682DBd77054d2287BFf7cA7D';
+const JUICE_YIELD_REPLACEMENT_ADDRESS = '0xbDa2dCc2652C7CcEaeBa65DA2D95705b8B346ED5';
 
 (async () => {
     const env = process.env.REWARDS_TYPE;
@@ -133,8 +134,11 @@ const JUICE_GOLD_REPLACEMENT_ADDRESS = '0x34C9F9353566Fd33682DBd77054d2287BFf7cA
      */
     const account_totals = {};
     processed_locks.forEach(m => {
-        if (m.account.toLowerCase() === JUICE_GOLD_ORIGINAL_ADDRESS && env === "GOLD") {
+        if (m.account.toLowerCase() === JUICE_ORIGINAL_ADDRESS && env === "GOLD") {
           m.account = JUICE_GOLD_REPLACEMENT_ADDRESS
+        }
+        if (m.account.toLowerCase() === JUICE_ORIGINAL_ADDRESS && env === "YIELD") {
+          m.account = JUICE_YIELD_REPLACEMENT_ADDRESS
         }
         if (!account_totals[m.account]){
             account_totals[m.account] = {
